@@ -1,0 +1,189 @@
+@import "tailwindcss";
+
+/* Self-hosted, all under the SIL Open Font License; a theme picks two */
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/fraunces";
+@import "@fontsource-variable/outfit";
+@import "@fontsource-variable/figtree";
+
+/* Frontile: the drawer of the mobile menu (app/components/mobile-nav.gts) */
+@import "@frontile/theme";
+
+/* The themes, `theme:` in site.yaml (lib/themes.mjs) */
+@import "./themes/layout.css";
+@import "./themes/alps.css";
+@import "./themes/basecamp.css";
+@import "./themes/night.css";
+
+@plugin "@tailwindcss/typography";
+@plugin "@frontile/theme/plugin/default";
+
+/*
+ * Tailwind doesn't look in node_modules: Frontile's own classes, from
+ * wherever the install put it (package: is resolved in vite.config.mjs)
+ */
+@source "package:frontile";
+@source "package:@frontile/theme";
+
+/*
+ * The blog's colour (`colour:` in site.yaml, set on :root in index.html) in
+ * the shades the templates use as accent-50 … accent-900
+ */
+@theme {
+  --color-accent-50: color-mix(in oklab, var(--blog-colour) 7%, white);
+  --color-accent-100: color-mix(in oklab, var(--blog-colour) 15%, white);
+  --color-accent-200: color-mix(in oklab, var(--blog-colour) 30%, white);
+  --color-accent-300: color-mix(in oklab, var(--blog-colour) 50%, white);
+  --color-accent-600: var(--blog-colour);
+  --color-accent-700: color-mix(in oklab, var(--blog-colour) 85%, black);
+  --color-accent-800: color-mix(in oklab, var(--blog-colour) 70%, black);
+  --color-accent-900: color-mix(in oklab, var(--blog-colour) 55%, black);
+  --font-display: "Fraunces Variable", ui-serif, georgia, serif;
+  --font-sans:
+    "Inter Variable", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+/*
+ * Frontile in the theme's colours and fonts, the blog's colour as its own,
+ * so the menu on a phone looks like the page (its own sit on :root and
+ * .light)
+ */
+html:root {
+  --font-header: var(--font-display);
+  --font-body: var(--font-sans);
+  --font-label: var(--font-sans);
+  --color-surface-drawer: var(--color-white);
+  --color-on-surface-drawer: var(--color-stone-900);
+  --color-surface-modal: var(--color-white);
+  --color-on-surface-modal: var(--color-stone-900);
+  --color-primary: var(--color-accent-600);
+  --color-on-primary: white;
+  --color-primary-subtle: var(--color-accent-50);
+  --color-on-primary-subtle: var(--color-accent-800);
+  --color-primary-soft: var(--color-accent-100);
+  --color-on-primary-soft: var(--color-accent-800);
+  --color-primary-muted: var(--color-accent-200);
+  --color-on-primary-muted: var(--color-accent-900);
+  --color-primary-mild: var(--color-accent-300);
+  --color-on-primary-mild: var(--color-accent-900);
+  --color-primary-firm: var(--color-accent-700);
+  --color-on-primary-firm: white;
+  --color-primary-strong: var(--color-accent-800);
+  --color-on-primary-strong: white;
+  --color-primary-bolder: var(--color-accent-900);
+  --color-on-primary-bolder: white;
+}
+
+/*
+ * A section heading: "The facts", "Photo gallery". A serif
+ * title over a thin rule in the blog's colour.
+ */
+@utility section-heading {
+  @apply scroll-mt-8 border-b-2 border-accent-200 pb-2 font-display text-2xl font-semibold text-stone-900;
+}
+
+/* The page behind an open photo (app/components/gallery.gts) stays put */
+html:has(dialog[open]) {
+  overflow: hidden;
+}
+
+/* Inline code on a light background, not in backticks */
+.prose code:not(pre code) {
+  @apply rounded bg-stone-200/70 px-1.5 py-0.5 font-medium;
+
+  &::before,
+  &::after {
+    content: none;
+  }
+}
+
+/*
+ * A code block with its file's name on top (```yaml title="site.yaml",
+ * lib/markdown.mjs): the name is a tab on the block.
+ */
+.prose figure.code-file {
+  @apply my-6;
+
+  & figcaption {
+    @apply mt-0 inline-block rounded-t-lg bg-stone-700 px-3 py-1 font-mono text-sm text-stone-100;
+  }
+
+  & pre {
+    @apply mt-0 rounded-tl-none;
+  }
+}
+
+/* A route on the swisstopo map (![The route](./route.gpx), lib/route.mjs) */
+.prose figure.route iframe {
+  @apply aspect-[16/10] w-full rounded-2xl border-0 bg-stone-100;
+}
+
+/*
+ * A checklist item (- [x], - [?], lib/checklist.mjs): a badge with its
+ * symbol where the bullet would be. Anywhere else, like a table, a
+ * <span class="check-mark" data-check="plus"> is a badge in the line.
+ */
+.prose li.check {
+  @apply relative list-none;
+
+  & .check-mark {
+    @apply absolute top-[0.45em] -left-[1.9em];
+  }
+}
+
+.prose .check-mark {
+  @apply inline-flex size-[1.2em] items-center justify-center rounded-md align-middle text-[0.8em] leading-none font-bold;
+
+  &::before {
+    content: var(--check) / "";
+  }
+
+  &[data-check="todo"] {
+    @apply border-2 border-stone-300 bg-white;
+
+    --check: "";
+  }
+
+  &[data-check="done"] {
+    @apply bg-emerald-100 text-emerald-700;
+
+    --check: "✓";
+  }
+
+  &[data-check="plus"] {
+    @apply bg-emerald-100 text-emerald-700;
+
+    --check: "+";
+  }
+
+  &[data-check="minus"] {
+    @apply bg-rose-100 text-rose-700;
+
+    --check: "−";
+  }
+
+  &[data-check="question"] {
+    @apply bg-violet-100 text-violet-700;
+
+    --check: "?";
+  }
+
+  &[data-check="important"] {
+    @apply bg-orange-100 text-orange-700;
+
+    --check: "!";
+  }
+
+  &[data-check="information"] {
+    @apply bg-sky-100 font-serif text-sky-700 italic;
+
+    --check: "i";
+  }
+
+  &[data-check="star"] {
+    @apply bg-amber-100 text-amber-600;
+
+    --check: "★";
+  }
+}

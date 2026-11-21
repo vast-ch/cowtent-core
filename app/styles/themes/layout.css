@@ -1,0 +1,12 @@
+/*
+ * The parts of the page (app/templates/application.gts) before a theme
+ * places them: below lg only the page, MobileNav has the rest
+ */
+.site-header,
+.site-topbar,
+.site-ridge,
+.site-sidebar,
+.site-band,
+.site-profile {
+  @apply hidden;
+}

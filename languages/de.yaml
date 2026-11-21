@@ -1,0 +1,124 @@
+# Jedes Wort des Blogs rund um die Beiträge, auf Deutsch. Ein Blog kann ein
+# eigenes languages/de.yaml haben: was dort steht, gilt, der Rest kommt von
+# hier. {value}, {count}... werden eingesetzt; # in {count, plural, ...}
+# ist die Zahl.
+
+# Für Daten und Zahlen: 14. September 2024, 1.070 m
+locale: de
+
+# Die Namen der Tags des Blogs (tags: eines Beitrags), nach ID, im eigenen
+# languages/de.yaml des Blogs. Ein Tag ohne Namen zeigt seine ID in
+# Wörtern: trail-running ist "Trail Running", country/new-zealand
+# "New Zealand".
+tags: {}
+
+# Auf jeder Seite: Kopf und Fuss
+layout:
+  # Over the mountains in the alps theme, on the front page and the posts
+  section-posts: Abenteuer
+  by: von
+  homepage: Startseite
+  rss-feed: RSS-Feed
+
+# Die Seitenleiste, und das Menü, das sie auf dem Handy öffnet
+sidebar:
+  explore: Entdecken
+  theme: Aussehen
+  all-posts: Alle Abenteuer
+  rss-feed: RSS-Feed
+  tags: Tags
+  filters: Filter
+  menu: Menü
+  filters-selected: "{count, plural, one {# Filter} other {# Filter}}"
+  show-posts: "{count, plural, =0 {Keine Abenteuer} one {# Abenteuer zeigen} other {# Abenteuer zeigen}}"
+
+# Die Filter aus den Fakten der Beiträge, unter Filter
+filters:
+  rating: Bewertung
+  ascent: Höhenmeter
+  distance: Distanz
+  time: Zeit
+  gradient: Steigung
+  # Die Sterne einer Bewertung
+  rating-stars: "{value}"
+  # Die Bereiche: bis zu einer Grenze, und der offene ganz oben
+  ascent-under: "< {value} m"
+  ascent-over: "> {value} m"
+  distance-under: "< {value} km"
+  distance-over: "> {value} km"
+  time-under: "< {value} h"
+  time-over: "> {value} h"
+  gradient-under: "< {value} %"
+  gradient-over: "> {value} %"
+
+# Die Startseite, mit dem Filter der Tags aus der Seitenleiste
+front-page:
+  filter: Filter
+  only: Nur
+  remove-filter: Diesen Filter entfernen
+  show-all: Alle zeigen
+  no-posts: Kein Abenteuer hat bisher all das.
+
+# Ein Beitrag
+post:
+  draft: Entwurf
+  more: Weitere Abenteuer
+  newer: Neuer
+  older: Älter
+
+  # Die Tabelle vor der Geschichte (facts: des Beitrags)
+  facts:
+    heading: Die Fakten
+    date: Datum
+    location: Ort
+    grade: Schwierigkeit
+    rating: Bewertung
+    points: Wegpunkte
+    distance: Distanz
+    ascent: Aufstieg
+    duration: Dauer
+    moving-time: Bewegungszeit
+    links: Links
+    time: "{hours} h {minutes} min"
+
+  # Vorgelesen für das Symbol eines Checklisten-Punkts, - [x] und ähnliche
+  checklist:
+    todo: Offen
+    done: Erledigt
+    plus: Plus
+    minus: Minus
+    question: Frage
+    important: Wichtig
+    information: Information
+    star: Stern
+  # Eine GPX-Datei auf der Karte, ![Die Route](./route.gpx)
+  route:
+    map: Die Route
+    download: GPX herunterladen
+
+  # Die Fotos am Ende (der Ordner gallery des Beitrags) und die Vollbildansicht
+  gallery:
+    heading: Fotogalerie
+    close: Schliessen
+    previous: Vorheriges Foto
+    next: Nächstes Foto
+
+  # Der Knopf unter einem Beitrag, und die E-Mail, die er beginnt
+  # (email: in site.yaml)
+  feedback:
+    button: Schreib mir einen Kommentar
+    greeting: "Hallo {name},"
+    intro: 'Ich habe deinen Artikel "{title}" ({url}) gelesen und wollte sagen:'
+    placeholder: "[hier deinen Text einfügen]"
+
+# Die Seite für eine Adresse, unter der nichts ist
+not-found:
+  title: Nicht gefunden
+  heading: Abseits der Karte
+  back: Zurück zu allen Abenteuern
+
+# Die Themes, zur Auswahl wenn site.yaml theme-switcher: true hat
+themes:
+  alps: Alpen
+  basecamp: Basislager
+  night: Nacht

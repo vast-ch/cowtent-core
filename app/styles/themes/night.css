@@ -1,0 +1,158 @@
+/*
+ * night: after dark. The greys turn around (light text on dark ground),
+ * the blog's colour mixes with the dark instead of white. A menu bar under
+ * the stars across the top: a small photo, the name and the links of
+ * Explore; the tags and filters in an open column on the right.
+ */
+[data-theme="night"] {
+  color-scheme: dark;
+
+  /*
+   * Its own colour, moonlight, rather than the blog's: a warm colour mixed
+   * into the dark turns brown. Dark text on it.
+   */
+  &:root {
+    --blog-colour: #818cf8;
+    --color-on-primary: #0b1120;
+    --color-on-primary-firm: #0b1120;
+  }
+
+  --site-sky: #0f172a;
+  --color-white: #1a2233;
+  --color-stone-50: #0b1120;
+  --color-stone-100: #1e293b;
+  --color-stone-200: #2b3648;
+  --color-stone-300: #3d4a5f;
+  --color-stone-400: #64748b;
+  --color-stone-500: #8b97aa;
+  --color-stone-600: #a7b1c2;
+  --color-stone-700: #c7cfdb;
+  --color-stone-800: #e0e5ec;
+  --color-stone-900: #f1f4f8;
+  --color-slate-700: #c7cfdb;
+  --color-slate-900: #f1f4f8;
+  --color-accent-50: color-mix(in oklab, var(--blog-colour) 14%, #0b1120);
+  --color-accent-100: color-mix(in oklab, var(--blog-colour) 24%, #0b1120);
+  --color-accent-200: color-mix(in oklab, var(--blog-colour) 40%, #0b1120);
+  --color-accent-300: color-mix(in oklab, var(--blog-colour) 60%, #0b1120);
+  --color-accent-700: color-mix(in oklab, var(--blog-colour) 70%, white);
+  --color-accent-800: color-mix(in oklab, var(--blog-colour) 55%, white);
+  --color-accent-900: color-mix(in oklab, var(--blog-colour) 40%, white);
+
+  /* Amber is the moon's pale yellow here, the stars of a rating too */
+  --color-amber-600: #fcd34d;
+
+  /* The tags' chips (app/content/tag-cloud.ts): a hint of their colour */
+  --color-sky-50: color-mix(in oklab, var(--color-sky-600) 8%, #1a2233);
+  --color-sky-100: color-mix(in oklab, var(--color-sky-600) 16%, #1a2233);
+  --color-sky-800: color-mix(in oklab, var(--color-sky-600) 55%, white);
+  --color-amber-50: color-mix(in oklab, var(--color-amber-600) 8%, #1a2233);
+  --color-amber-100: color-mix(in oklab, var(--color-amber-600) 16%, #1a2233);
+  --color-amber-800: #fde68a;
+  --color-rose-50: color-mix(in oklab, var(--color-rose-600) 8%, #1a2233);
+  --color-rose-100: color-mix(in oklab, var(--color-rose-600) 16%, #1a2233);
+  --color-rose-800: color-mix(in oklab, var(--color-rose-600) 55%, white);
+  --color-violet-50: color-mix(in oklab, var(--color-violet-600) 8%, #1a2233);
+  --color-violet-100: color-mix(in oklab, var(--color-violet-600) 16%, #1a2233);
+  --color-violet-800: color-mix(in oklab, var(--color-violet-600) 55%, white);
+
+  & .site-topbar {
+    @apply sticky top-0 z-30 lg:block;
+
+    border-bottom: 1px solid var(--color-stone-200);
+    background:
+      radial-gradient(circle at 52% 50%, #fef9c3 0 9px, transparent 10px),
+      radial-gradient(
+        circle at 52% 50%,
+        rgb(254 249 195 / 15%) 0 22px,
+        transparent 23px
+      ),
+      radial-gradient(1px 1px at 23px 31px, #fff 99%, transparent),
+      radial-gradient(1px 1px at 97px 112px, #cbd5e1 99%, transparent),
+      radial-gradient(1.5px 1.5px at 151px 54px, #fff 99%, transparent),
+      radial-gradient(1px 1px at 211px 140px, #e2e8f0 99%, transparent),
+      radial-gradient(1px 1px at 268px 18px, #fff 99%, transparent),
+      radial-gradient(1.5px 1.5px at 322px 98px, #e2e8f0 99%, transparent),
+      var(--site-sky);
+    background-size:
+      auto,
+      auto,
+      340px 160px,
+      340px 160px,
+      340px 160px,
+      340px 160px,
+      340px 160px,
+      340px 160px,
+      auto;
+  }
+
+  /* Explore's links in a row, without its heading and arrows */
+  & .site-topbar-explore {
+    & h2,
+    & [aria-hidden="true"] {
+      @apply sr-only;
+    }
+
+    & ul {
+      @apply mt-0 flex-row gap-7 text-sm;
+    }
+  }
+
+  /* One post a row, its photo on the right */
+  & .post-list {
+    @apply sm:grid-cols-1;
+  }
+
+  & .post-card:has(.post-card-photo img) {
+    @apply sm:flex-row-reverse;
+
+    & .post-card-photo {
+      @apply sm:w-2/5 sm:shrink-0;
+
+      & img {
+        @apply sm:aspect-auto sm:h-full;
+      }
+    }
+  }
+
+  & .site-body {
+    @apply mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_15rem] lg:gap-16 lg:px-8;
+  }
+
+  & .site-sidebar {
+    @apply lg:order-last lg:block lg:border-l lg:border-stone-200 lg:pl-8;
+  }
+
+  & .site-sidebar-inner {
+    @apply sticky top-26 space-y-0 divide-y divide-stone-200;
+
+    & > * {
+      @apply m-0 py-6 first:pt-0;
+    }
+
+    /* In the menu bar already */
+    & > [data-test-explore] {
+      @apply hidden;
+    }
+
+    & h2 {
+      @apply font-sans text-xs font-semibold tracking-widest text-stone-500 uppercase;
+    }
+  }
+
+  & .prose {
+    --tw-prose-body: var(--color-stone-700);
+    --tw-prose-headings: var(--color-stone-900);
+    --tw-prose-lead: var(--color-stone-600);
+    --tw-prose-bold: var(--color-stone-900);
+    --tw-prose-counters: var(--color-stone-500);
+    --tw-prose-bullets: var(--color-stone-400);
+    --tw-prose-hr: var(--color-stone-200);
+    --tw-prose-quotes: var(--color-stone-900);
+    --tw-prose-quote-borders: var(--color-stone-300);
+    --tw-prose-captions: var(--color-stone-500);
+    --tw-prose-code: var(--color-stone-900);
+    --tw-prose-th-borders: var(--color-stone-300);
+    --tw-prose-td-borders: var(--color-stone-200);
+  }
+}

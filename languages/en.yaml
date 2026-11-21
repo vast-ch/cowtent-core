@@ -1,0 +1,121 @@
+# Every word of the blog around the posts, in English. A blog can have its
+# own languages/en.yaml: what it says there wins, the rest comes from here.
+# {value}, {count}... are filled in; # in a {count, plural, ...} is the count.
+
+# For dates and numbers: 14 September 2024, 1,070 m
+locale: en-GB
+
+# The names of the blog's tags (a post's tags:), by id, in a blog's own
+# languages/en.yaml. A tag without one shows its id in words:
+# trail-running is "Trail Running", country/new-zealand "New Zealand".
+tags: {}
+
+# Around every page: the header, the footer
+layout:
+  # Over the mountains in the alps theme, on the front page and the posts
+  section-posts: Adventures
+  by: by
+  homepage: Homepage
+  rss-feed: RSS feed
+
+# The sidebar, and the menu that opens it on a phone
+sidebar:
+  explore: Explore
+  theme: Theme
+  all-posts: All adventures
+  rss-feed: RSS feed
+  tags: Tags
+  filters: Filters
+  menu: Menu
+  filters-selected: "{count, plural, one {# filter} other {# filters}}"
+  show-posts: "{count, plural, =0 {No adventures} one {Show # adventure} other {Show # adventures}}"
+
+# The filters made from the facts of the posts, under Filters
+filters:
+  rating: Rating
+  ascent: Altitude gain
+  distance: Distance
+  time: Time
+  gradient: Gradient
+  # The stars of a rating
+  rating-stars: "{value}"
+  # The ranges: up to a limit, and the open one at the top
+  ascent-under: "< {value} m"
+  ascent-over: "> {value} m"
+  distance-under: "< {value} km"
+  distance-over: "> {value} km"
+  time-under: "< {value} h"
+  time-over: "> {value} h"
+  gradient-under: "< {value} %"
+  gradient-over: "> {value} %"
+
+# The front page, with the filter of the tags picked in the sidebar
+front-page:
+  filter: Filter
+  only: Only
+  remove-filter: Remove this filter
+  show-all: Show all
+  no-posts: No adventure has all of these yet.
+
+# A post
+post:
+  draft: Draft
+  more: More adventures
+  newer: Newer
+  older: Older
+
+  # The table before the story (the post's facts:)
+  facts:
+    heading: The facts
+    date: Date
+    location: Location
+    grade: Grade
+    rating: Rating
+    points: Points
+    distance: Distance
+    ascent: Ascent
+    duration: Duration
+    moving-time: Moving time
+    links: Links
+    time: "{hours} h {minutes} min"
+
+  # Read out for the badge of a checklist item, - [x] and the like
+  checklist:
+    todo: To do
+    done: Done
+    plus: Plus
+    minus: Minus
+    question: Question
+    important: Important
+    information: Information
+    star: Star
+  # A GPX shown on the map, ![The route](./route.gpx)
+  route:
+    map: The route
+    download: Download the GPX
+
+  # The photos at the end (the post's gallery folder) and the full-screen view
+  gallery:
+    heading: Photo gallery
+    close: Close
+    previous: Previous photo
+    next: Next photo
+
+  # The button under a post, and the email it starts (site.yaml's email:)
+  feedback:
+    button: Send me a comment
+    greeting: "Hi {name},"
+    intro: 'I read your article "{title}" ({url}) and I wanted to say:'
+    placeholder: "[fill in your text here]"
+
+# The page for an address with nothing at it
+not-found:
+  title: Not found
+  heading: Off the map
+  back: Back to all adventures
+
+# The themes, in the theme switcher (theme-switcher: true in site.yaml)
+themes:
+  alps: Alps
+  basecamp: Basecamp
+  night: Night
