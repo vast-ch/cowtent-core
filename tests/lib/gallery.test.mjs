@@ -22,19 +22,29 @@ test('no gallery folder, no gallery', () => {
 test('the file names are the captions, numbered ones first in their order', () => {
   const dir = post(
     'Lunch.jpg',
-    '10 The way down.JPG',
+    '10 - The way down.JPG',
     '2 The top.png',
-    '01 The start.jpeg',
+    '01 - The start.jpeg',
     'A notes.txt',
     '.DS_Store',
   );
 
   assert.deepEqual(galleryOf(dir), [
-    { src: './gallery/01 The start.jpeg', caption: 'The start' },
+    { src: './gallery/01 - The start.jpeg', caption: 'The start' },
     { src: './gallery/2 The top.png', caption: 'The top' },
-    { src: './gallery/10 The way down.JPG', caption: 'The way down' },
+    { src: './gallery/10 - The way down.JPG', caption: 'The way down' },
     { src: './gallery/Lunch.jpg', caption: 'Lunch' },
   ]);
+});
+
+test('only the first " - " separates, a date is not a number', () => {
+  assert.deepEqual(
+    galleryOf(post('3 - Half-way - up.jpg', '2024-07-25 Summit.jpg')),
+    [
+      { src: './gallery/3 - Half-way - up.jpg', caption: 'Half-way - up' },
+      { src: './gallery/2024-07-25 Summit.jpg', caption: '2024-07-25 Summit' },
+    ],
+  );
 });
 
 test('a photo named only by its number has no caption', () => {

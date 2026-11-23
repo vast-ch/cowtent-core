@@ -28,15 +28,22 @@ test('cover.jpg is the cover, without alt text', () => {
   });
 });
 
-test('the rest of the name is the alt text, in any case and photo format', () => {
-  assert.deepEqual(coverOf(post('COVER  The ridge at dawn .WebP')), {
-    src: './COVER  The ridge at dawn .WebP',
-    alt: 'The ridge at dawn',
+test('the rest of the name after " - " is the alt text, in any case and photo format', () => {
+  assert.deepEqual(coverOf(post('COVER - The ridge - at dawn .WebP')), {
+    src: './COVER - The ridge - at dawn .WebP',
+    alt: 'The ridge - at dawn',
   });
   assert.equal(coverOf(post('Cover.jpeg')).src, './Cover.jpeg');
   assert.equal(coverOf(post('cover.avif')).src, './cover.avif');
   assert.equal(coverOf(post('cover.png')).src, './cover.png');
   assert.equal(coverOf(post('cover.txt')), undefined);
+});
+
+test('a space alone works too, the older way', () => {
+  assert.deepEqual(coverOf(post('cover The ridge.jpg')), {
+    src: './cover The ridge.jpg',
+    alt: 'The ridge',
+  });
 });
 
 test('two covers are an error that names them', () => {
@@ -51,7 +58,7 @@ test('a ? or # in its name is an error', () => {
 });
 
 test('the dev server knows a cover photo', () => {
-  assert.equal(isCoverPhoto('/blog/posts/a/Cover The top.jpg'), true);
+  assert.equal(isCoverPhoto('/blog/posts/a/Cover - The top.jpg'), true);
   assert.equal(isCoverPhoto('/blog/posts/a/cover.png'), true);
   assert.equal(isCoverPhoto('/blog/posts/a/01.jpg'), false);
   assert.equal(isCoverPhoto('/blog/posts/a/cover.md'), false);

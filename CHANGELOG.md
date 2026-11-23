@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.3.1 - 2026-11-23
+
+- **`-` after a gallery photo's number and a cover's `cover`**, easier
+  to read than a space: `gallery/01 - The view.jpg`,
+  `cover - The ridge at dawn.jpg`. Only the first `-` counts, so a
+  caption can have its own. A space alone still works, so older names
+  keep their order and captions.
+
 ## v0.3.0 - 2026-11-23
 
 - **The cover is a file name**: the photo named `cover` next to a post's or

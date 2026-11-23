@@ -337,7 +337,7 @@ module('Acceptance | blog', function (hooks) {
     assert.dom('h1').hasText('The first Munro');
   });
 
-  test('the photo named cover is the cover, the rest of its name the alt text', async function (assert) {
+  test('the photo named cover is the cover, the rest of its name after " - " the alt text', async function (assert) {
     await visit(SCRAMBLE);
     assert.dom('img[data-test-cover]').hasAttribute('alt', 'Hands on the rock');
 
@@ -348,7 +348,7 @@ module('Acceptance | blog', function (hooks) {
     assert.dom('img[data-test-cover]').doesNotExist('no photo, no cover');
   });
 
-  test('the gallery folder: file names are the captions, in the order of their numbers', async function (assert) {
+  test('the gallery folder: file names are the captions, in the order of their numbers, " - " or a space after them', async function (assert) {
     await visit(SCRAMBLE);
 
     const alts = [
