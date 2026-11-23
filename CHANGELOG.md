@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.6.1 - 2026-11-23
+
+- **The build doesn't stop on a photo's GPS** on Node 24: the photos are
+  read before their GPS is, so no file is left open.
+
 ## v0.6.0 - 2026-11-23
 
 - **A route is on the blog's own map** of swisstopo's tiles, no longer

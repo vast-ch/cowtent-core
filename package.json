@@ -1,6 +1,6 @@
 {
   "name": "cowtent-core",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "private": true,
   "description": "cowtent (cow + tent = content): the platform of an outdoor blog. Markdown posts with photos, facts and filters, built into a static site.",
   "repository": "github:vast-ch/cowtent-core",
