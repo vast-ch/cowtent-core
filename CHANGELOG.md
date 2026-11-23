@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.4.0 - 2026-11-23
+
+- **The host settings come with the build**: every page has its
+  Content-Security-Policy as a `<meta>`, with the hashes of its own inline
+  scripts, which every host applies, GitHub Pages too; and `dist/_headers`
+  caches the assets forever and lets the swisstopo map load a GPX, for
+  Netlify and Cloudflare. A blog's `netlify.toml` is down to
+  `command = "pnpm build"` and `publish = "dist"`.
+- **On Netlify, the blog knows its address** without `url:` in
+  site.yaml: Netlify's primary one, its own domain once it has one, for
+  the feed and the links that get shared
+- A blog builds with `pnpm update cowtent-core && cowtent build`, so a
+  host that keeps `node_modules` between builds still gets the newest
+  cowtent-core.
+
 ## v0.3.1 - 2026-11-23
 
 - **`-` after a gallery photo's number and a cover's `cover`**, easier

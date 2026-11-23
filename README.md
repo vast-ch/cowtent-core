@@ -13,7 +13,7 @@ Outfit, Figtree, Rokkitt and Bitter, are under the SIL Open Font License
 and installed from npm. The photos of the dummy blog of the tests are from
 Lorem Picsum, under the Unsplash License (tests/fixtures/PHOTOS.md).
 
-Version 0.3.1, see [CHANGELOG.md](CHANGELOG.md).
+Version 0.4.0, see [CHANGELOG.md](CHANGELOG.md).
 
 ## Screenshots
 
@@ -51,12 +51,13 @@ Its `package.json`:
 ```json
 {
   "scripts": {
-    "build": "cowtent build",
+    "build": "pnpm update cowtent-core && cowtent build",
     "start": "cowtent start"
   },
   "dependencies": {
     "cowtent-core": "github:vast-ch/cowtent-core"
-  }
+  },
+  "packageManager": "pnpm@10.34.9"
 }
 ```
 
@@ -70,10 +71,25 @@ Its `package.json`:
 A blog can live at the root of its host or under a path, like
 `https://vast-ch.github.io/cowtent-starter`. The build takes the path from
 the blog's address (`url:` in site.yaml, or `SITE_URL`, which the GitHub
-Pages workflow passes) and uses it for the assets, the app's routes, the
+Pages workflow passes, or on Netlify its `URL`) and uses it for the assets, the app's routes, the
 links, the feed and the installed app (`site.base`, lib/site.mjs). The
 production build of the test blog runs under `/trips/`, and
 `tests/output/site.test.mjs` checks every link stays under it.
+
+Whatever the host needs beyond the files comes with the build, so a
+blog's own host settings are only its build command (`pnpm build`) and
+folder (`dist`), and a change reaches every blog with its next build
+(lib/host.mjs):
+
+- The Content-Security-Policy is a `<meta>` in every page, with the
+  hashes of the page's own inline scripts: every host applies it, GitHub
+  Pages too.
+- `dist/_headers` caches the fingerprinted assets forever and lets the
+  swisstopo map load a GPX; Netlify and Cloudflare read it.
+
+A blog's `package.json` builds with `pnpm update cowtent-core && cowtent
+build`, so that a host that keeps `node_modules` between builds still
+gets the newest cowtent-core.
 
 ## Languages
 

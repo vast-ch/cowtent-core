@@ -13,6 +13,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { listRoutes } from './lib/content.mjs';
 import { readLanguage } from './lib/language.mjs';
 import { readSite } from './lib/site.mjs';
+import { prepareForHosts } from './lib/host.mjs';
 import { blog, faviconOf } from './lib/vite-plugin-blog.mjs';
 
 // The test build runs in the browser only, nothing to prerender
@@ -72,6 +73,19 @@ export default defineConfig({
     }),
     packageSources(),
     tailwindcss(),
+    // The Content-Security-Policy in every page and _headers (lib/host.mjs):
+    // after emberSsg has prerendered the pages, before VitePWA precaches them
+    !isTest && {
+      name: 'host-files',
+      apply: 'build',
+      closeBundle: {
+        order: 'post',
+        sequential: true,
+        handler() {
+          if (written) prepareForHosts(outDir);
+        },
+      },
+    },
     // Installable on a phone: the manifest, the icons with their <link>s in
     // the head, and a service worker that keeps the site readable offline
     !isTest &&

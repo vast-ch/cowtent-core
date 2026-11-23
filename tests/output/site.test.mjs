@@ -3,7 +3,8 @@
 //
 // Runs at the end of cowtent build, against the blog it built.
 
-import { existsSync, readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -207,4 +208,40 @@ test('the service worker precaches every prerendered page', () => {
 test('GitHub Pages has a page for unknown URLs', () => {
   assert.ok(existsSync(join(dist, '404.html')));
   assert.ok(!existsSync(join(dist, '404')), 'a /404 page');
+});
+
+test('every page has its Content-Security-Policy, which allows its inline scripts', () => {
+  const pages = readdirSync(dist, { recursive: true }).filter((file) =>
+    file.endsWith('.html'),
+  );
+
+  assert.ok(pages.length > 1);
+
+  for (const file of pages) {
+    const html = readFileSync(join(dist, file), 'utf8');
+    const policy = html.match(
+      /<meta http-equiv="Content-Security-Policy" content="([^"]+)">/,
+    )?.[1];
+
+    assert.ok(policy, `${file} has no policy`);
+    assert.ok(
+      html.indexOf(policy) < html.indexOf('<script'),
+      `${file}: the policy comes after a script`,
+    );
+
+    for (const [, code] of html.matchAll(
+      /<script(?![^>]*\ssrc=)[^>]*>([\s\S]*?)<\/script>/g,
+    )) {
+      const hash = createHash('sha256').update(code).digest('base64');
+
+      assert.ok(policy.includes(`'sha256-${hash}'`), `${file}: ${code}`);
+    }
+  }
+});
+
+test('Netlify and Cloudflare get the headers of the assets', () => {
+  assert.match(
+    readFileSync(join(dist, '_headers'), 'utf8'),
+    /^\/assets\/\*\n(?: {2}.*\n)* {2}Access-Control-Allow-Origin: \*$/m,
+  );
 });

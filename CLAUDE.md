@@ -13,6 +13,9 @@ runs `cowtent build` (`bin/cowtent.mjs`).
 - `lib/vite-plugin-blog.mjs`: Markdown modules, `virtual:blog-site` (settings
   and translations with the blog's tag names), `virtual:blog-cover`, rss.xml,
   robots.txt, favicon.svg.
+- `lib/host.mjs`: after prerendering, the CSP as a `<meta>` in every page
+  (hashes of its inline scripts) and `dist/_headers`, so a blog's host
+  config is only `pnpm build` and `dist`.
 - The blog's `colour:` is `--blog-colour` on :root (index.html); Tailwind's
   `accent-*` shades are mixed from it (`app/styles/app.css`). Use `accent-*`,
   never a fixed colour, for anything that should follow the blog's colour.
