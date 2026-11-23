@@ -5,15 +5,11 @@
 @import "@fontsource-variable/fraunces";
 @import "@fontsource-variable/outfit";
 @import "@fontsource-variable/figtree";
+@import "@fontsource-variable/rokkitt";
+@import "@fontsource-variable/bitter";
 
 /* Frontile: the drawer of the mobile menu (app/components/mobile-nav.gts) */
 @import "@frontile/theme";
-
-/* The themes, `theme:` in site.yaml (lib/themes.mjs) */
-@import "./themes/layout.css";
-@import "./themes/alps.css";
-@import "./themes/basecamp.css";
-@import "./themes/night.css";
 
 @plugin "@tailwindcss/typography";
 @plugin "@frontile/theme/plugin/default";
@@ -58,7 +54,7 @@ html:root {
   --color-surface-modal: var(--color-white);
   --color-on-surface-modal: var(--color-stone-900);
   --color-primary: var(--color-accent-600);
-  --color-on-primary: white;
+  --color-on-primary: var(--color-on-accent, white);
   --color-primary-subtle: var(--color-accent-50);
   --color-on-primary-subtle: var(--color-accent-800);
   --color-primary-soft: var(--color-accent-100);
@@ -68,7 +64,7 @@ html:root {
   --color-primary-mild: var(--color-accent-300);
   --color-on-primary-mild: var(--color-accent-900);
   --color-primary-firm: var(--color-accent-700);
-  --color-on-primary-firm: white;
+  --color-on-primary-firm: var(--color-on-accent, white);
   --color-primary-strong: var(--color-accent-800);
   --color-on-primary-strong: white;
   --color-primary-bolder: var(--color-accent-900);

@@ -6,7 +6,7 @@ import { Chip } from 'frontile';
 import site from 'virtual:blog-site';
 
 import { Head } from '../components/head.gts';
-import { PostCard } from '../components/post-card.gts';
+import { ThemePostList } from '../components/themed.gts';
 import { tagKey, tagValue } from '../content/tag-cloud.ts';
 
 import type { TOC } from '@ember/component/template-only';
@@ -18,7 +18,7 @@ interface Filter {
 }
 
 /**
- * Every post as a card, newest first, or the ones with all the tags of the
+ * Every post, newest first, as the theme lists them, or the ones with all the tags of the
  * filter (?tags=…): each one can be dropped, or all at once.
  */
 <template>
@@ -61,11 +61,7 @@ interface Filter {
   {{/if}}
 
   {{#if @model.posts.length}}
-    <div class="post-list grid gap-8 sm:grid-cols-2">
-      {{#each @model.posts as |post|}}
-        <PostCard @post={{post}} />
-      {{/each}}
-    </div>
+    <ThemePostList @posts={{@model.posts}} />
   {{else}}
     <p
       class="rounded-3xl bg-white p-10 text-center text-stone-600 shadow-sm"

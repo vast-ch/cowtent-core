@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.2.0 - 2026-11-23
+
+- **Themes are templates**: each theme is a folder in `app/themes/` with
+  its own layout and front-page list as `.gts`, built from shared
+  components, without any CSS: its fonts and colours are classes of its
+  layout too. A visitor's own theme (`theme-switcher: true`) takes over
+  the page as soon as the app has started.
+- **basecamp** is an old camping poster: Rokkitt and Bitter on cream
+  paper, 70s sunset stripes under the name, cards as stickers with a dark
+  edge and a hard shadow set further off: the posts' in the blog's colour,
+  the sidebar's in mustard
+- **alps** lists the posts one a row, the photo on the left, the tags at
+  the bottom
+- **Filters on the front page**: after a post's tags, the filters its facts
+  put it in (rating, altitude gain, distance, time, gradient) as chips in
+  their sidebar colours, each a link to the front page filtered by it
+- **Screenshots** in the README, of the dummy blog of the tests: the front
+  page and a post on a desktop and a phone, and the front page in each
+  theme. `pnpm screenshots` makes them anew.
+
 ## v0.1.0 - 2026-11-23
 
 The first version of cowtent-core: a blog's folder of Markdown and YAML

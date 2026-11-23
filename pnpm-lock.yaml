@@ -41,6 +41,9 @@ importers:
       '@embroider/vite':
         specifier: ^1.8.0
         version: 1.8.0(@babel/core@7.29.13)(@embroider/core@4.6.10(@glint/template@1.11.1))(@glint/template@1.11.1)(vite@8.3.8(@types/node@26.6.6)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))
+      '@fontsource-variable/bitter':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@fontsource-variable/figtree':
         specifier: ^5.3.0
         version: 5.3.0
@@ -51,6 +54,9 @@ importers:
         specifier: ^5.3.0
         version: 5.3.0
       '@fontsource-variable/outfit':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource-variable/rokkitt':
         specifier: ^5.3.0
         version: 5.3.0
       '@frontile/theme':
@@ -222,6 +228,9 @@ importers:
       globals:
         specifier: ^16.5.0
         version: 16.5.0
+      playwright:
+        specifier: ^1.65.1
+        version: 1.65.1
       prettier:
         specifier: ^3.9.10
         version: 3.10.1
@@ -1052,6 +1061,9 @@ packages:
   '@floating-ui/utils@0.2.12':
     resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
 
+  '@fontsource-variable/bitter@5.3.0':
+    resolution: {integrity: sha512-TNGusdX+fjWE2b8pTG7kH1A615DbjjSj8/PwVm+iyiFiLFtioHXt6eH5jIFE2kmiA3Ogp03jEyZDsukotzC+4Q==}
+
   '@fontsource-variable/figtree@5.3.0':
     resolution: {integrity: sha512-VRVodD7OiG7apQwE8/2fMjaqpY/a0qRJqL5HtYj8CKIVps+9amaFcdfKmDIf7iqYQx6iPLlArVXAfKeIZmVcNQ==}
 
@@ -1063,6 +1075,9 @@ packages:
 
   '@fontsource-variable/outfit@5.3.0':
     resolution: {integrity: sha512-fPb5XnYK0k7SbR++HEmm4+ZqDszmLKQ+sPRUr8oQ/KNC0vy6r6hazJFe8iYozv4cqlHbvJ/JECkJWrfDodUMVQ==}
+
+  '@fontsource-variable/rokkitt@5.3.0':
+    resolution: {integrity: sha512-2IFboxeeIE9va/Jm5kYfMhKjPsm4VYxamP8rvFnY4pn04vn8zG0MQAqCCDhxKihwGLWXXpBv8OC3xCxaw2wSjg==}
 
   '@formatjs/fast-memoize@3.1.7':
     resolution: {integrity: sha512-zXfhLpvA6T7+efdt9JLbBwZ00tT7NsBMDVnDu8rpHeNNv8KfRZAMo2gkG0k9lK/Nzc//3kJ9pImsfuJxk3KhUA==}
@@ -5153,6 +5168,16 @@ packages:
     resolution: {integrity: sha512-nDywThFk1i4BQK4twPQ6TA4RT8bDY96yeuCVBWL3ePARCiEKDRSrNGbFIgUJpLp+XeIR65v8ra7WuJOFUBtkMA==}
     engines: {node: '>=8'}
 
+  playwright-core@1.65.1:
+    resolution: {integrity: sha512-hqPpz7blSMPxWVdoeE1yiBSzXsKiVOd2k+kjCvmUywD2GPO2Dd9HfcWnq9NN0GHbNZDFgZ9JfBFr+X5/BLo0qw==}
+    engines: {node: '>=20'}
+    hasBin: true
+
+  playwright@1.65.1:
+    resolution: {integrity: sha512-vJ1FuoOrNwOKHUIVEvSt3jT1L+wjjDpwhwIstKtfvTh8XIG4FG4bIFuvNdMxi81LGfAhUgUZleVFaOLY4RIUUw==}
+    engines: {node: '>=20'}
+    hasBin: true
+
   possible-typed-array-names@1.1.0:
     resolution: {integrity: sha512-/+5VFTchJDoVj3bhoqi6UeymcD00DAwb1nJwamzPvHEszJ4FpF6SNNbUbOS8yI56qHzdV8eK0qEfOSiodkTdxg==}
     engines: {node: '>= 0.4'}
@@ -7664,6 +7689,8 @@ snapshots:
 
   '@floating-ui/utils@0.2.12': {}
 
+  '@fontsource-variable/bitter@5.3.0': {}
+
   '@fontsource-variable/figtree@5.3.0': {}
 
   '@fontsource-variable/fraunces@5.3.0': {}
@@ -7671,6 +7698,8 @@ snapshots:
   '@fontsource-variable/inter@5.3.0': {}
 
   '@fontsource-variable/outfit@5.3.0': {}
+
+  '@fontsource-variable/rokkitt@5.3.0': {}
 
   '@formatjs/fast-memoize@3.1.7': {}
 
@@ -12310,6 +12339,12 @@ snapshots:
   pkg-up@3.1.0:
     dependencies:
       find-up: 3.0.0
+
+  playwright-core@1.65.1: {}
+
+  playwright@1.65.1:
+    dependencies:
+      playwright-core: 1.65.1
 
   possible-typed-array-names@1.1.0: {}
 

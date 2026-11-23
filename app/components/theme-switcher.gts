@@ -1,15 +1,13 @@
 import Component from '@glimmer/component';
-import { tracked } from '@glimmer/tracking';
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
+import { service } from '@ember/service';
 
 import { t } from 'ember-intl';
 
 import site from 'virtual:blog-site';
 
-// The same key as the script in index.html (lib/vite-plugin-blog.mjs) that
-// applies the choice before the page is drawn
-const KEY = `cowtent-theme:${import.meta.env.BASE_URL}`;
+import type ThemeService from '../services/theme.ts';
 
 // What each theme looks like, small: its sky over its ground
 const SWATCH: Record<string, string> = {
@@ -20,22 +18,13 @@ const SWATCH: Record<string, string> = {
 
 /**
  * With `theme-switcher: true` in site.yaml, the themes to pick from: the
- * page changes on the spot (app/styles/themes/), and the browser remembers
+ * page changes on the spot (app/themes/), and the browser remembers
  * the choice for this blog.
  */
 export class ThemeSwitcher extends Component<{ Element: HTMLElement }> {
-  @tracked current = currentTheme();
+  @service declare theme: ThemeService;
 
-  pick = (theme: string) => {
-    this.current = theme;
-    document.documentElement.dataset['theme'] = theme;
-
-    try {
-      localStorage.setItem(KEY, theme);
-    } catch {
-      // Private browsing: it lasts until the next page load
-    }
-  };
+  pick = (theme: string) => this.theme.pick(theme);
 
   <template>
     <section data-test-theme-switcher ...attributes>
@@ -47,7 +36,7 @@ export class ThemeSwitcher extends Component<{ Element: HTMLElement }> {
           <button
             type="button"
             class="flex items-center gap-2 rounded-full bg-white py-1 pr-3 pl-1 text-sm font-medium text-stone-700 ring-1 ring-stone-200 hover:ring-accent-600 aria-pressed:text-stone-900 aria-pressed:ring-2 aria-pressed:ring-accent-600"
-            aria-pressed={{if (isSame theme this.current) "true" "false"}}
+            aria-pressed={{if (isSame theme this.theme.current) "true" "false"}}
             {{on "click" (fn this.pick theme)}}
             data-test-theme={{theme}}
           >
@@ -61,12 +50,6 @@ export class ThemeSwitcher extends Component<{ Element: HTMLElement }> {
       </div>
     </section>
   </template>
-}
-
-function currentTheme() {
-  return typeof document === 'undefined'
-    ? site.theme
-    : (document.documentElement.dataset['theme'] ?? site.theme);
 }
 
 function isSame(a: string, b: string) {

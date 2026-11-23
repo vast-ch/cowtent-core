@@ -180,6 +180,34 @@ module('Acceptance | blog', function (hooks) {
     assert.dom('[data-test-filter]').doesNotExist();
   });
 
+  test('a post on the front page has its tags, then its filters', async function (assert) {
+    await visit('/');
+
+    const card = '[data-test-post="2022-07-03-big-skyrace"]';
+    const chips = [
+      ...document.querySelectorAll(`${card} [data-test-post-tag]`),
+    ];
+
+    assert.deepEqual(
+      chips.map((chip) => chip.getAttribute('data-test-post-tag')),
+      [
+        'race',
+        'running',
+        'trail-running',
+        'country/norway',
+        'rating/5-stars',
+        'ascent/over-2000m',
+      ],
+    );
+    assert
+      .dom(`${card} [data-test-post-tag="ascent/over-2000m"]`)
+      .hasText('> 2000 m');
+
+    await click(`${card} [data-test-post-tag="ascent/over-2000m"]`);
+
+    assert.strictEqual(currentURL(), '/?tags=ascent%2Fover-2000m');
+  });
+
   test('the facts filter the posts too, in intervals', async function (assert) {
     // The dummy posts have 1100 m, 1750 m and 2500 m of ascent
     await visit('/');
@@ -397,24 +425,27 @@ module('Acceptance | blog', function (hooks) {
   });
 
   test('the theme switcher changes the theme and remembers it', async function (assert) {
-    const html = document.documentElement;
-    const theme = html.dataset['theme'];
-
     try {
       await visit('/');
       assert
         .dom('[data-test-theme-switcher] [data-test-theme]')
         .exists({ count: 3 });
+      assert.dom('[data-test-band]').exists('the alps layout');
 
       await click('[data-test-theme-switcher] [data-test-theme="night"]');
 
-      assert.strictEqual(html.dataset['theme'], 'night');
+      assert.dom('[data-test-band]').doesNotExist();
+      assert.dom('[data-test-topbar]').exists('swapped for the night layout');
       assert
         .dom('[data-test-theme-switcher] [data-test-theme="night"]')
         .hasAttribute('aria-pressed', 'true');
       assert.strictEqual(localStorage.getItem('cowtent-theme:/'), 'night');
+      assert.strictEqual(
+        getComputedStyle(document.documentElement).colorScheme,
+        'dark',
+        'its colours on <html>',
+      );
     } finally {
-      if (theme) html.dataset['theme'] = theme;
       localStorage.removeItem('cowtent-theme:/');
     }
   });
