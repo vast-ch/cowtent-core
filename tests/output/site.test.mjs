@@ -159,6 +159,30 @@ test('every route map loads a GPX of the site, by its whole URL', () => {
   }
 });
 
+test("a post's route.gpx is its map, and linked in the feed", () => {
+  const rss = readFileSync(join(dist, 'rss.xml'), 'utf8');
+
+  for (const post of posts) {
+    const own = existsSync(join(dirname(post.path), 'route.gpx'));
+
+    assert.equal(
+      page(`/${post.id}`).includes('data-test-route'),
+      own,
+      `${post.id}: a map only with route.gpx`,
+    );
+  }
+
+  const routes = posts.filter((post) =>
+    existsSync(join(dirname(post.path), 'route.gpx')),
+  );
+
+  assert.equal(
+    rss.match(/\/route-[\w-]+\.gpx" download/g)?.length ?? 0,
+    routes.length,
+    'every route.gpx in the feed',
+  );
+});
+
 test('the site installs as an app, with icons that exist', () => {
   const manifest = JSON.parse(
     readFileSync(join(dist, 'manifest.webmanifest'), 'utf8'),

@@ -28,11 +28,11 @@ A dummy post for the tests, with everything a post can have. It goes back to [th
 
 ![An inline photo](./inline.jpg)
 
-## The route
+## The gully
 
-![Up the gully](./route.gpx)
+![Up the gully](./the-gully.gpx)
 
-Or only [the GPX file](./route.gpx).
+Or only [the GPX file](./the-gully.gpx).
 
 ## What worked
 

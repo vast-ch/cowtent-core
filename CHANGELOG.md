@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.7.0 - 2026-11-24
+
+- **A post's `route.gpx` is its map**, by itself: the file named exactly
+  that next to `index.md` is drawn above the gallery, with the post's
+  points and the gallery's photos on it, the download and
+  map.geo.admin.ch under it. The feed links to both.
+- **A GPX in the text** (`![The way to the hut](./hut.gpx)`) is still a
+  map where it stands, of only its track.
+
 ## v0.6.1 - 2026-11-23
 
 - **The build doesn't stop on a photo's GPS** on Node 24: the photos are

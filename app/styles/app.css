@@ -173,11 +173,12 @@ html:has(dialog[open]) {
 }
 
 /*
- * A route on swisstopo's map (![The route](./route.gpx), lib/route.mjs,
- * app/content/route-map.ts). isolate: Leaflet's own layers stay under the
- * band and the title, which stay at the top over the page.
+ * A route on swisstopo's map (a post's route.gpx, app/components/route.gts,
+ * or a GPX in the text, lib/route.mjs; app/content/route-map.ts). isolate:
+ * Leaflet's own layers stay under the band and the title, which stay at
+ * the top over the page.
  */
-.prose figure.route .route-map {
+figure.route .route-map {
   @apply isolate flex aspect-[16/10] w-full items-center justify-center overflow-hidden rounded-2xl bg-stone-100 font-sans;
 }
 

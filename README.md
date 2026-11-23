@@ -1,7 +1,7 @@
 # cowtent-core
 
 **cowtent** = cow + tent = content, the platform of an outdoor blog. Markdown posts with photos, a gallery,
-facts (distance, ascent, time), checklists, GPX routes on the swisstopo map with the post's points and photos, tags and filters, themes, an RSS feed,
+facts (distance, ascent, time), checklists, a post's route.gpx on the swisstopo map with its points and photos, tags and filters, themes, an RSS feed,
 prerendered to a static site. Ember 7 (compatless) on Vite, WarpDrive,
 Tailwind CSS 4.
 
@@ -42,8 +42,9 @@ favicon.svg             optional, the icon of the site and the app
 posts/<slug>/index.md   a post at /<slug>, its photos next to it
 posts/<slug>/cover.jpg  its cover: "cover - The ridge at dawn.jpg", the rest the alt text
 posts/<slug>/gallery/   its gallery: "01 - The view.jpg", the name the caption
+posts/<slug>/route.gpx  its route on the map above the gallery, with its points and photos
 pages/<slug>/index.md   a page at /page/<slug>
-public/                 optional, copied as is (GPX files...)
+public/                 optional, copied as is
 ```
 
 Its `package.json`:

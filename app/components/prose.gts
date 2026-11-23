@@ -5,12 +5,12 @@ import { modifier } from 'ember-modifier';
 import { routeMap } from '../content/route-map.ts';
 
 import type { TOC } from '@ember/component/template-only';
-import type { Pins } from '../content/route-map.ts';
 
-// The routes of the text on maps, with the post's points and photos
-const routeMaps = modifier((element: HTMLElement, [pins]: [Pins]) => {
+// The GPX embedded in the text on maps, only their tracks: the post's
+// points and photos are on its own route's map (app/components/route.gts)
+const routeMaps = modifier((element: HTMLElement) => {
   const maps = [...element.querySelectorAll<HTMLElement>('.route-map')].map(
-    (container) => routeMap(container, pins),
+    (container) => routeMap(container, {}),
   );
 
   return () => {
@@ -20,22 +20,18 @@ const routeMaps = modifier((element: HTMLElement, [pins]: [Pins]) => {
 
 /**
  * Markdown rendered at build time (lib/markdown.mjs), styled by
- * @tailwindcss/typography with the blog's fonts and colour. A route in it
- * becomes a map (app/content/route-map.ts) with @points and @photos on it.
+ * @tailwindcss/typography with the blog's fonts and colour. A GPX embedded
+ * in it becomes a map (app/content/route-map.ts).
  */
 export const Prose: TOC<{
   Element: HTMLDivElement;
-  Args: { html: string; points?: Pins['points']; photos?: Pins['photos'] };
+  Args: { html: string };
 }> = <template>
   <div
     class="prose prose-lg max-w-none prose-stone prose-headings:scroll-mt-8 prose-headings:font-display prose-headings:font-semibold prose-a:text-accent-700 prose-a:decoration-accent-300 prose-a:underline-offset-4 hover:prose-a:decoration-accent-700 prose-table:text-base prose-img:rounded-2xl"
-    {{routeMaps (pins @points @photos)}}
+    {{routeMaps}}
     ...attributes
   >
     {{htmlSafe @html}}
   </div>
 </template>;
-
-function pins(points: Pins['points'], photos: Pins['photos']): Pins {
-  return { points, photos };
-}

@@ -478,35 +478,60 @@ module('Acceptance | blog', function (hooks) {
     }
   });
 
-  test('an embedded GPX is the route on a map, with the points and photos', async function (assert) {
+  test("a post's route.gpx is a map above the gallery, with its points and photos", async function (assert) {
     await visit(SCRAMBLE);
 
     assert
-      .dom('figure.route .route-map')
-      .hasClass('leaflet-container', 'the map is drawn')
-      .hasAttribute('aria-label', 'Up the gully');
+      .dom('[data-test-route] .route-map')
+      .hasClass('leaflet-container', 'the map is drawn');
     assert
-      .dom('.route-map .route-point')
+      .dom('[data-test-route] + [data-test-gallery]')
+      .exists('right above the gallery');
+    assert
+      .dom('[data-test-route] .route-point')
       .exists({ count: 1 }, 'the point with a latitude and longitude');
     assert
-      .dom('.route-map .route-photo')
+      .dom('[data-test-route] .route-photo')
       .exists({ count: 1 }, 'the photo with GPS')
       .hasAttribute('title', 'The first photo');
     assert
-      .dom('figure.route figcaption a[download]')
-      .hasText('Download the GPX');
+      .dom('[data-test-route] figcaption a[download]')
+      .hasText('Download the GPX')
+      .hasAttribute('href', /\/route-[\w-]+\.gpx$/);
     assert
-      .dom('figure.route figcaption a[href^="https://map.geo.admin.ch/#/map?"]')
+      .dom(
+        '[data-test-route] figcaption a[href^="https://map.geo.admin.ch/#/map?"]',
+      )
       .hasText('map.geo.admin.ch');
-    assert
-      .dom('.prose p > a[href$=".gpx"]')
-      .hasText('the GPX file', 'a linked GPX stays a link');
 
-    await click('.route-map .route-photo');
+    await click('[data-test-route] .route-photo');
 
     assert
       .dom('[data-test-lightbox] img')
       .hasAttribute('alt', 'The first photo', "the photo's pin opens it");
+  });
+
+  test('a GPX embedded in the text is a map of only its track', async function (assert) {
+    await visit(SCRAMBLE);
+
+    assert
+      .dom('.prose figure.route .route-map')
+      .hasClass('leaflet-container')
+      .hasAttribute('aria-label', 'Up the gully');
+    assert.dom('.prose .route-point').doesNotExist();
+    assert.dom('.prose .route-photo').doesNotExist();
+    assert
+      .dom('.prose figure.route figcaption a[download]')
+      .hasText('Download the GPX');
+    assert
+      .dom('.prose p > a[href$=".gpx"]')
+      .hasText('the GPX file', 'a linked GPX stays a link');
+  });
+
+  test('a post without route.gpx has no map', async function (assert) {
+    await visit('/2020-05-01-first-munro');
+
+    assert.dom('[data-test-route]').doesNotExist();
   });
 
   test('a list item with a symbol in brackets gets its badge', async function (assert) {

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="cowtent tests" xmlns="http://www.topografix.com/GPX/1/1">
+  <trk>
+    <name>A scramble</name>
+    <trkseg>
+      <trkpt lat="46.6322" lon="7.9012"><ele>652</ele></trkpt>
+      <trkpt lat="46.6421" lon="7.9811"><ele>880</ele></trkpt>
+      <trkpt lat="46.6511" lon="7.9922"><ele>1790</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

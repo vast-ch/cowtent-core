@@ -15,12 +15,14 @@ import { Gallery } from '../components/gallery.gts';
 import { Head } from '../components/head.gts';
 import { NotFound } from '../components/not-found.gts';
 import { Prose } from '../components/prose.gts';
+import { Route } from '../components/route.gts';
 import { postCover } from '../content/covers.ts';
 import { PROSE_SIZES, photoUrl } from '../content/photo.ts';
 import { tagChip, tagKey } from '../content/tag-cloud.ts';
 
 import type { TOC } from '@ember/component/template-only';
 import type { GalleryPhoto } from '../content/gallery.ts';
+import type { PostRoute } from '../content/route.ts';
 import type { Post } from '../content/schemas.ts';
 
 const path = (id: string) => `/${id}`;
@@ -53,7 +55,7 @@ const Neighbour: TOC<{
 
 /**
  * A post: date, title and tags, the cover, the facts, the story, the
- * gallery, then the way to the next one.
+ * route's map, the gallery, then the way to the next one.
  */
 <template>
   {{#if @model}}
@@ -118,8 +120,12 @@ const Neighbour: TOC<{
           {{/if}}
 
           {{#if post.html}}
-            <Prose
-              @html={{post.html}}
+            <Prose @html={{post.html}} />
+          {{/if}}
+
+          {{#if @model.route}}
+            <Route
+              @route={{@model.route}}
               @points={{post.facts.points}}
               @photos={{@model.gallery}}
             />
@@ -163,6 +169,7 @@ const Neighbour: TOC<{
       newer?: Post;
       older?: Post;
       gallery: GalleryPhoto[];
+      route?: PostRoute;
     } | null;
   };
 }>;
