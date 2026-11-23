@@ -18,12 +18,23 @@ import type { TOC } from '@ember/component/template-only';
 /*
  * On <html> while this layout is on the page: rounded and friendly, Outfit
  * for the headings and Figtree for the text; a heading jumped to lands
- * below the band (and the bar on a phone)
+ * below the band and the title under it (and the bar on a phone)
  */
 const ROOT = [
   "[:root:has(&)]:[--font-display:'Outfit_Variable',ui-sans-serif,system-ui,sans-serif]",
   "[:root:has(&)]:[--font-sans:'Figtree_Variable',ui-sans-serif,system-ui,sans-serif,'Apple_Color_Emoji','Segoe_UI_Emoji','Noto_Color_Emoji']",
-  '[:root:has(&)]:scroll-pt-34 lg:[:root:has(&)]:scroll-pt-32',
+  '[:root:has(&)]:scroll-pt-49 lg:[:root:has(&)]:scroll-pt-45',
+].join(' ');
+
+/*
+ * The title of a post or page sticks right under the band, which is 8rem
+ * down on a phone (the bar and the band), 9rem from sm and 7rem on lg, and
+ * shrinks on the way there, on the page's background as wide as the page
+ * (shrink-on-scroll, app/styles/app.css)
+ */
+const TITLE = [
+  '[&>article>h1]:sticky [&>article>h1]:z-10 [&>article>h1]:shrink-on-scroll [&>article>h1]:[--title-bg:var(--color-stone-50)]',
+  '[&>article>h1]:top-32 sm:[&>article>h1]:top-36 lg:[&>article>h1]:top-28',
 ].join(' ');
 
 /*
@@ -36,9 +47,9 @@ const PEAKS =
 /**
  * alps: the sidebar on the left, a bit wider, with the big photo, the name
  * and the tagline on top, and everything a footer would have. Over the
- * page the outline of the Alps with where on the blog it is,
- * staying at the top while the page scrolls. Below lg the sidebar is in
- * MobileNav's drawer.
+ * page the outline of the Alps with where on the blog it is, and the
+ * title of the post or page under it, staying at the top while the page
+ * scrolls. Below lg the sidebar is in MobileNav's drawer.
  */
 export const Layout: TOC<{
   Element: HTMLDivElement;
@@ -86,7 +97,8 @@ export const Layout: TOC<{
         </div>
       </aside>
 
-      <div class="min-w-0">
+      {{! overflow-x-clip: the title's background stops at the sidebar }}
+      <div class="min-w-0 overflow-x-clip">
         <div
           class="sticky top-12 z-20 h-20 bg-stone-50 sm:h-24 lg:top-0 lg:h-28"
           data-test-band
@@ -111,8 +123,10 @@ export const Layout: TOC<{
           ><SectionName /></p>
         </div>
         {{! A post or page starts where the section name above it does }}
+        {{! The title of a post or page stays under the band too, smaller }}
         <main
-          class="max-w-5xl px-4 pt-8 pb-12 sm:px-6 lg:px-12 lg:pt-10 [&_article]:ml-0"
+          class="max-w-5xl px-4 pt-8 pb-12 sm:px-6 lg:px-12 lg:pt-10 [&_article]:ml-0
+            {{TITLE}}"
         >
           {{yield}}
         </main>

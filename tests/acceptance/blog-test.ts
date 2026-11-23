@@ -2,6 +2,7 @@ import { module, test } from 'qunit';
 import {
   click,
   currentURL,
+  find,
   triggerEvent,
   triggerKeyEvent,
   visit,
@@ -288,7 +289,7 @@ module('Acceptance | blog', function (hooks) {
     await click('[data-test-explore] a[href="/page/about"]');
 
     assert.strictEqual(currentURL(), '/page/about');
-    assert.dom('h1').hasText('About me');
+    assert.dom('h1').hasText('Test Writer');
   });
 
   test('All adventures in Explore lists every post, without the filter', async function (assert) {
@@ -427,12 +428,26 @@ module('Acceptance | blog', function (hooks) {
     assert.dom('[data-test-section]').hasText('Adventures', 'a post');
 
     await visit('/page/about');
-    assert.dom('[data-test-section]').hasText('About me', "a page's title");
+    assert
+      .dom('[data-test-section]')
+      .hasText('About me', "a page's label in the menu, not its title");
 
     await visit('/no-such-post');
     assert
       .dom('[data-test-section]')
       .hasText('Not found', 'a post that isn’t there');
+  });
+
+  test('the alps theme keeps the title of a post or page under the band', async function (assert) {
+    for (const url of [SCRAMBLE, '/page/about']) {
+      await visit(url);
+
+      assert.strictEqual(
+        getComputedStyle(find('main > article > h1')!).position,
+        'sticky',
+        url,
+      );
+    }
   });
 
   test('the theme switcher changes the theme and remembers it', async function (assert) {

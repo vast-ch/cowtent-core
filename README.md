@@ -109,7 +109,8 @@ every key of en.yaml (`tests/lib/language.test.mjs` checks).
 
 - `alps` - the sidebar on the left with the big photo, the name and the
   tagline; the outline of the Alps over the page with where on the blog it
-  is; one post a row with its photo on the left
+  is, and under it the title of the post or page, smaller, as the page
+  scrolls; one post a row with its photo on the left
 - `basecamp` - an old camping poster: slab fonts on cream paper, the
   name across the top over the stripes of a 70s sunset, the posts as a
   showcase of stickers with hard shadows in three columns, the sidebar on

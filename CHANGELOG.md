@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.5.0 - 2026-11-23
+
+- **alps: the title of a post or page stays at the top** under the band
+  while the page scrolls, smaller once it's there, on the page's
+  background across the whole width with a thin line under it. Where the
+  browser can't tie an animation to the scroll, it stays full size.
+- **alps: a page's band says what the menu calls it**, "About me" over a
+  page titled with a name; a page that isn't in the menu has its title
+  there, as before.
+
 ## v0.4.1 - 2026-11-23
 
 - **On Vercel and Render too, the blog knows its address** without `url:`
