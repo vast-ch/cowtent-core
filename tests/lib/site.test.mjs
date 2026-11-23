@@ -41,7 +41,15 @@ function withEnv(env, run) {
 }
 
 test("the address is site.yaml's url:, else the one the host gave the site", () => {
-  const none = { SITE_URL: '', NETLIFY: '', URL: '' };
+  const none = {
+    SITE_URL: '',
+    NETLIFY: '',
+    URL: '',
+    VERCEL: '',
+    VERCEL_PROJECT_PRODUCTION_URL: '',
+    RENDER: '',
+    RENDER_EXTERNAL_URL: '',
+  };
 
   withEnv(none, () => {
     assert.equal(site('').host, 'http://localhost:4200');
@@ -57,6 +65,18 @@ test("the address is site.yaml's url:, else the one the host gave the site", () 
       assert.equal(site('').host, 'https://bella.netlify.app');
       assert.equal(site('url: https://bella.ch').host, 'https://bella.ch');
     },
+  );
+  withEnv(
+    { ...none, VERCEL: '1', VERCEL_PROJECT_PRODUCTION_URL: 'bella.vercel.app' },
+    () => assert.equal(site('').host, 'https://bella.vercel.app'),
+  );
+  withEnv(
+    {
+      ...none,
+      RENDER: 'true',
+      RENDER_EXTERNAL_URL: 'https://bella.onrender.com',
+    },
+    () => assert.equal(site('').host, 'https://bella.onrender.com'),
   );
   withEnv({ ...none, URL: 'https://elsewhere.example' }, () => {
     assert.equal(site('').host, 'http://localhost:4200', 'URL only on Netlify');

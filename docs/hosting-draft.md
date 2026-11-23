@@ -1,6 +1,8 @@
 # Draft: more hosts, out of the box
 
-Status: draft, nothing here is built yet. Facts about the hosts are from
+Status: draft. Since v0.4.1 core reads the address on Vercel and Render,
+and cowtent-starter's 03 explains a manual setup for Cloudflare Pages,
+Vercel and Render; the ready-made files below are not built yet. Facts about the hosts are from
 memory and marked **verify** where they decide the design: check each
 against the host's current docs before building it.
 
@@ -95,7 +97,11 @@ with static assets**, and is moving new projects to Workers (**verify**).
   ```
   pnpm from `packageManager` (with Corepack, **verify**), Node from
   `engines` in `package.json` rather than `.node-version` (**verify**).
-- After: Vercel ignores `_headers`. Two ways to keep headers in core:
+- After: Vercel ignores `_headers`, but already sends
+  `Access-Control-Allow-Origin: *` on static files (checked on several
+  vercel.app sites, 2026-11-23), so swisstopo's maps work without it; only
+  the long caching of `/assets/*` is missing. Two ways to keep headers in
+  core:
   - core writes the **Build Output API** (`.vercel/output/` with
     `config.json` routes carrying the headers, and `static/` with the
     site). Vercel uses it when the build produces it; then
@@ -105,8 +111,9 @@ with static assets**, and is moving new projects to Workers (**verify**).
     they'd go stale in every fork.
 - 404: Vercel serves `404.html` from the output for unknown URLs
   (**verify** with `cleanUrls`).
-- Address: `VERCEL_PROJECT_PRODUCTION_URL` (production domain, no scheme,
-  **verify**), read like Netlify's `URL` when `VERCEL=1`.
+- Address: `VERCEL_PROJECT_PRODUCTION_URL`, the production domain without
+  `https://`, set at build time (Vercel's docs): core reads it since
+  v0.4.1.
 - Plan: core writes `.vercel/output` when `VERCEL=1`; the starter carries
   the two-line `vercel.json` only if Vercel still needs it then.
 
@@ -127,7 +134,9 @@ with static assets**, and is moving new projects to Workers (**verify**).
   headers and redirects live in `render.yaml` or the dashboard
   (**verify**). Only the CSP (`<meta>`) comes from core; the swisstopo
   CORS header would have to be in every fork's `render.yaml`.
-- Address: `RENDER_EXTERNAL_URL` (**verify**).
+- Address: `RENDER_EXTERNAL_URL`: core reads it since v0.4.1. Render
+  documents it for web services; community reports say static site builds
+  get it too (**verify** on a real build).
 - Plan: lowest priority. If built, the CORS header is the one thing a
   fork carries, and 03 says Render's maps may need it.
 

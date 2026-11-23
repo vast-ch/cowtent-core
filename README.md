@@ -13,7 +13,7 @@ Outfit, Figtree, Rokkitt and Bitter, are under the SIL Open Font License
 and installed from npm. The photos of the dummy blog of the tests are from
 Lorem Picsum, under the Unsplash License (tests/fixtures/PHOTOS.md).
 
-Version 0.4.0, see [CHANGELOG.md](CHANGELOG.md).
+Version 0.4.1, see [CHANGELOG.md](CHANGELOG.md).
 
 ## Screenshots
 
@@ -70,8 +70,10 @@ Its `package.json`:
 
 A blog can live at the root of its host or under a path, like
 `https://vast-ch.github.io/cowtent-starter`. The build takes the path from
-the blog's address (`url:` in site.yaml, or `SITE_URL`, which the GitHub
-Pages workflow passes, or on Netlify its `URL`) and uses it for the assets, the app's routes, the
+the blog's address (`url:` in site.yaml, or the one its host gives the
+build: `SITE_URL` from the GitHub Pages workflow, Netlify's `URL`, Vercel's
+production domain, Render's address; Cloudflare Pages has none, a blog
+there writes `url:`) and uses it for the assets, the app's routes, the
 links, the feed and the installed app (`site.base`, lib/site.mjs). The
 production build of the test blog runs under `/trips/`, and
 `tests/output/site.test.mjs` checks every link stays under it.

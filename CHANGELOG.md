@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.4.1 - 2026-11-23
+
+- **On Vercel and Render too, the blog knows its address** without `url:`
+  in site.yaml: Vercel's production domain (its own domain once it has
+  one), Render's onrender.com address. Cloudflare Pages doesn't give a
+  build its production address, so a blog there writes `url:`.
+
 ## v0.4.0 - 2026-11-23
 
 - **The host settings come with the build**: every page has its
