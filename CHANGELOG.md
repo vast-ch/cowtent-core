@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.3.0 - 2026-11-23
+
+- **The cover is a file name**: the photo named `cover` next to a post's or
+  page's `index.md`, in any case and any photo format (`.jpg`, `.jpeg`,
+  `.png`, `.webp`, `.avif`), is its cover. The rest of the name is its alt
+  text, like a gallery photo's caption: `cover The ridge at dawn.jpg`.
+  `image:` in the front matter is gone, and a build that still has it
+  fails with a note to rename the photo.
+
 ## v0.2.0 - 2026-11-23
 
 - **Themes are templates**: each theme is a folder in `app/themes/` with

@@ -1,6 +1,5 @@
 ---
 title: "T6: A scramble"
-image: ./cover.jpg
 date: 2023-08-04T12:00:00+02:00
 tags:
   - munro

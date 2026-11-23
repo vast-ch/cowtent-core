@@ -15,7 +15,7 @@ const path = (id: string) => `/page/${id}`;
 const previewImage = (id: string) => {
   const cover = pageCover(id);
 
-  return cover ? photoUrl(cover) : undefined;
+  return cover ? photoUrl(cover.photo) : undefined;
 };
 
 /**
@@ -40,9 +40,9 @@ const previewImage = (id: string) => {
         {{#let (pageCover page.id) as |cover|}}
           {{#if cover}}
             <ResponsiveImage
-              @src={{cover}}
+              @src={{cover.photo}}
               @sizes={{PROSE_SIZES}}
-              alt=""
+              alt={{cover.alt}}
               loading="eager"
               class="mt-8 max-h-[32rem] w-full rounded-3xl object-cover"
             />

@@ -15,8 +15,6 @@ export const PostSchema = withDefaults({
     { kind: 'field', name: 'title' },
     { kind: 'field', name: 'date' },
     { kind: 'field', name: 'excerpt' },
-    { kind: 'field', name: 'image' },
-    { kind: 'field', name: 'imageMeta' },
     { kind: 'field', name: 'featured' },
     // false for a draft, which only the dev server has (lib/content.mjs)
     { kind: 'field', name: 'published' },
@@ -33,7 +31,6 @@ export const PageSchema = withDefaults({
   type: 'page',
   fields: [
     { kind: 'field', name: 'title' },
-    { kind: 'field', name: 'image' },
     { kind: 'field', name: 'html' },
   ],
 });
@@ -67,8 +64,6 @@ export interface Post {
   title: string;
   date: string;
   excerpt: string;
-  image?: string;
-  imageMeta?: { attribution?: string; attributionLink?: string };
   featured?: boolean;
   published?: boolean;
   facts?: Facts;
@@ -80,6 +75,5 @@ export interface Page {
   [Type]: 'page';
   id: string;
   title: string;
-  image?: string;
   html?: string;
 }

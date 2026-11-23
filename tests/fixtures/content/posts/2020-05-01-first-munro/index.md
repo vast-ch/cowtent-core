@@ -1,6 +1,5 @@
 ---
 title: The first Munro
-image: ./cover.jpg
 date: 2020-05-01T12:00:00+02:00
 tags:
   - munro

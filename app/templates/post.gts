@@ -28,7 +28,7 @@ const path = (id: string) => `/${id}`;
 const previewImage = (id: string) => {
   const cover = postCover(id);
 
-  return cover ? photoUrl(cover) : undefined;
+  return cover ? photoUrl(cover.photo) : undefined;
 };
 
 // Newer or older: a card linking to the post next to this one
@@ -102,10 +102,11 @@ const Neighbour: TOC<{
         {{#let (postCover post.id) as |cover|}}
           {{#if cover}}
             <ResponsiveImage
-              @src={{cover}}
+              @src={{cover.photo}}
               @sizes={{PROSE_SIZES}}
-              alt=""
+              alt={{cover.alt}}
               loading="eager"
+              data-test-cover
               class="mt-8 aspect-[3/2] w-full rounded-3xl object-cover"
             />
           {{/if}}

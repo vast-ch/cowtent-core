@@ -27,7 +27,7 @@ export const PostCover: TOC<{
         ...attributes
       >
         <ResponsiveImage
-          @src={{cover}}
+          @src={{cover.photo}}
           @sizes={{@sizes}}
           alt=""
           class="w-full object-cover {{@imageClass}}"

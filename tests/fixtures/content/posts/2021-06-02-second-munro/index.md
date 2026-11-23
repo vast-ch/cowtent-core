@@ -1,6 +1,5 @@
 ---
 title: The second Munro
-image: ./cover.jpg
 date: 2021-06-02T12:00:00+02:00
 tags:
   - munro

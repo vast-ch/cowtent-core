@@ -337,6 +337,17 @@ module('Acceptance | blog', function (hooks) {
     assert.dom('h1').hasText('The first Munro');
   });
 
+  test('the photo named cover is the cover, the rest of its name the alt text', async function (assert) {
+    await visit(SCRAMBLE);
+    assert.dom('img[data-test-cover]').hasAttribute('alt', 'Hands on the rock');
+
+    await visit('/2020-05-01-first-munro');
+    assert.dom('img[data-test-cover]').hasAttribute('alt', '');
+
+    await visit('/2024-09-05-a-draft');
+    assert.dom('img[data-test-cover]').doesNotExist('no photo, no cover');
+  });
+
   test('the gallery folder: file names are the captions, in the order of their numbers', async function (assert) {
     await visit(SCRAMBLE);
 

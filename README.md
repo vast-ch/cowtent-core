@@ -13,7 +13,7 @@ Outfit, Figtree, Rokkitt and Bitter, are under the SIL Open Font License
 and installed from npm. The photos of the dummy blog of the tests are from
 Lorem Picsum, under the Unsplash License (tests/fixtures/PHOTOS.md).
 
-Version 0.2.0, see [CHANGELOG.md](CHANGELOG.md).
+Version 0.3.0, see [CHANGELOG.md](CHANGELOG.md).
 
 ## Screenshots
 
@@ -40,6 +40,7 @@ languages/<code>.yaml   tag names, and any of the core's words reworded
 cover.jpg               the sidebar photo
 favicon.svg             optional, the icon of the site and the app
 posts/<slug>/index.md   a post at /<slug>, its photos next to it
+posts/<slug>/cover.jpg  its cover: "cover The ridge at dawn.jpg", the rest the alt text
 posts/<slug>/gallery/   its gallery: "01 The view.jpg", the name the caption
 pages/<slug>/index.md   a page at /page/<slug>
 public/                 optional, copied as is (GPX files...)
