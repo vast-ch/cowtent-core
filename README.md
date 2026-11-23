@@ -9,16 +9,16 @@ A blog is a separate repository with only the writing in it (see
 `cowtent-starter`): it depends on this package and builds with it.
 
 All of it, code and design, is MIT (LICENSE). The fonts, Inter, Fraunces,
-Outfit, Figtree, Rokkitt and Bitter, are under the SIL Open Font License and installed from
-npm.
+Outfit, Figtree, Rokkitt and Bitter, are under the SIL Open Font License
+and installed from npm. The photos of the dummy blog of the tests are from
+Lorem Picsum, under the Unsplash License (tests/fixtures/PHOTOS.md).
 
 Version 0.2.0, see [CHANGELOG.md](CHANGELOG.md).
 
 ## Screenshots
 
 The front page of the dummy blog of the tests (`tests/fixtures/content/`)
-in each theme, with photos from [Lorem Picsum](https://picsum.photos)
-(Unsplash) in place of its tiny ones.
+in each theme.
 
 ### alps
 
@@ -136,8 +136,7 @@ folder: the core's own code, no install in the blog and nothing to publish.
 BLOG_CONTENT=../cowtent-starter node bin/cowtent.mjs start
 ```
 
-`pnpm screenshots` makes the screenshots above anew from a copy of the dummy
-blog with the same Lorem Picsum photos every time (a cover for every post),
-in the Chrome that's installed, and overwrites `docs/screenshots/`
+`pnpm screenshots` makes the screenshots above anew from the dummy blog, in
+the Chrome that's installed, and overwrites `docs/screenshots/`
 (`scripts/screenshots.mjs`). A new theme gets its screenshot by itself; its
 heading and image in this README are added by hand.

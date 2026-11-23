@@ -1,5 +1,6 @@
 ---
 title: The second Munro
+image: ./cover.jpg
 date: 2021-06-02T12:00:00+02:00
 tags:
   - munro
@@ -9,4 +10,4 @@ facts:
   rating: 2
 ---
 
-A dummy post for the tests, without a cover. Rain, mostly.
+A dummy post for the tests. Rain, mostly.
