@@ -172,9 +172,42 @@ html:has(dialog[open]) {
   }
 }
 
-/* A route on the swisstopo map (![The route](./route.gpx), lib/route.mjs) */
-.prose figure.route iframe {
-  @apply aspect-[16/10] w-full rounded-2xl border-0 bg-stone-100;
+/*
+ * A route on swisstopo's map (![The route](./route.gpx), lib/route.mjs,
+ * app/content/route-map.ts). isolate: Leaflet's own layers stay under the
+ * band and the title, which stay at the top over the page.
+ */
+.prose figure.route .route-map {
+  @apply isolate flex aspect-[16/10] w-full items-center justify-center overflow-hidden rounded-2xl bg-stone-100 font-sans;
+}
+
+.route-map .route-line {
+  stroke: var(--color-rose-600);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.route-map .route-point {
+  fill: white;
+  fill-opacity: 1;
+  stroke: var(--color-stone-900);
+  stroke-width: 2.5;
+}
+
+/*
+ * A photo where it was taken: round, a white rim, bigger under the mouse.
+ * Important over Leaflet's width: auto for the images of its markers.
+ */
+.route-map .route-photo {
+  & img {
+    @apply size-full! cursor-pointer rounded-full object-cover shadow-md ring-2 ring-white transition-transform duration-200;
+  }
+
+  &:hover img,
+  &:focus-visible img {
+    @apply scale-[1.6];
+  }
 }
 
 /*

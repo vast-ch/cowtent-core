@@ -1,7 +1,7 @@
 # cowtent-core
 
 **cowtent** = cow + tent = content, the platform of an outdoor blog. Markdown posts with photos, a gallery,
-facts (distance, ascent, time), checklists, GPX routes on the swisstopo map, tags and filters, themes, an RSS feed,
+facts (distance, ascent, time), checklists, GPX routes on the swisstopo map with the post's points and photos, tags and filters, themes, an RSS feed,
 prerendered to a static site. Ember 7 (compatless) on Vite, WarpDrive,
 Tailwind CSS 4.
 

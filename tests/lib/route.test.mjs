@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { renderFeed, renderPage } from '../../lib/markdown.mjs';
-import { lv95, mapUrl } from '../../lib/route.mjs';
+import { lv95, mapUrl, trackOf } from '../../lib/route.mjs';
 
 const gpx = `<gpx><trk><trkseg>
   <trkpt lat="46.6322" lon="7.9012"/><trkpt lon="7.9922" lat="46.6511"/>
@@ -30,7 +30,7 @@ test('Swiss coordinates of a point', () => {
 test('the map is centred on the track, as close as it fits', () => {
   const url = mapUrl(gpx, 'https://blog.example.com/route.gpx', 'de');
 
-  assert.match(url, /^https:\/\/map\.geo\.admin\.ch\/#\/embed\?lang=de&/);
+  assert.match(url, /^https:\/\/map\.geo\.admin\.ch\/#\/map\?lang=de&/);
   assert.match(url, /&center=2638\d{3},1165\d{3}&z=5&/);
   assert.match(url, /&layers=GPX%7Chttps:\/\/blog\.example\.com\/route\.gpx$/);
 });
@@ -43,15 +43,11 @@ test('an embedded GPX is a map with a download link, a linked one a link', async
 
   assert.match(
     page,
-    /^<figure class="route"><iframe src="https:\/\/map\.geo\.admin\.ch\/#\/embed\?/,
+    /^<figure class="route"><div class="route-map not-prose" data-track="\[\[46\.6322,7\.9012\],\[46\.6511,7\.9922\]\]" role="region" aria-label="Up the gully"><a href="https:\/\/map\.geo\.admin\.ch\/#\/map\?[^"]+GPX%7Chttps:\/\/blog\.example\.com\/assets\/route\.gpx">Up the gully<\/a><\/div>/,
   );
   assert.match(
     page,
-    /GPX%7Chttps:\/\/blog\.example\.com\/assets\/route\.gpx" title="Up the gully"/,
-  );
-  assert.match(
-    page,
-    /<figcaption>Up the gully · <a href="\/assets\/route\.gpx" download>Download the GPX<\/a><\/figcaption><\/figure>/,
+    /<figcaption>Up the gully · <a href="\/assets\/route\.gpx" download>Download the GPX<\/a> · <a href="https:\/\/map\.geo\.admin\.ch\/#\/map\?[^"]+">map\.geo\.admin\.ch<\/a><\/figcaption><\/figure>/,
   );
   assert.match(
     page,
@@ -59,10 +55,22 @@ test('an embedded GPX is a map with a download link, a linked one a link', async
   );
 });
 
+test('the track for the map has at most 500 points, the last one kept', () => {
+  const long = `<gpx>${Array.from(
+    { length: 1201 },
+    (_, index) => `<trkpt lat="${46 + index / 1e4}" lon="7.123456789"/>`,
+  ).join('')}<wpt lat="47" lon="8"/></gpx>`;
+  const track = trackOf(long);
+
+  assert.ok(track.length <= 501, `${track.length} points`);
+  assert.deepEqual(track[0], [46, 7.12346]);
+  assert.deepEqual(track.at(-1), [46.12, 7.12346], 'not the waypoint');
+});
+
 test('without words in the brackets the map is "The route"', async () => {
   assert.match(
     await renderPage('![](./route.gpx)', options),
-    /title="The route"/,
+    /aria-label="The route"/,
   );
 });
 

@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.6.0 - 2026-11-23
+
+- **A route is on the blog's own map** of swisstopo's tiles, no longer
+  swisstopo's viewer in a frame: the track in red, the scroll wheel
+  scrolling the page. Under it the download and a link to the route on
+  map.geo.admin.ch, which is also what a reader without JavaScript and
+  the feed get.
+- **The points of the facts on the map**: a point with `latitude` and
+  `longitude` is a dot with its name and altitude.
+- **The gallery's photos on the map**: every photo with GPS in its EXIF is
+  a small round photo where it was taken, and opens in the gallery. The
+  photos the blog serves don't keep the GPS.
+
 ## v0.5.0 - 2026-11-23
 
 - **alps: the title of a post or page stays at the top** under the band

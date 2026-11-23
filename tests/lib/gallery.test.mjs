@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { galleryOf, isGalleryPhoto } from '../../lib/gallery.mjs';
+import { galleryOf, isGalleryPhoto, positionOf } from '../../lib/gallery.mjs';
 
 function post(...files) {
   const dir = mkdtempSync(join(tmpdir(), 'cowtent-gallery-'));
@@ -61,4 +61,20 @@ test('the dev server knows a gallery photo', () => {
   assert.equal(isGalleryPhoto('/blog/posts/a/gallery/01 Top.jpg'), true);
   assert.equal(isGalleryPhoto('/blog/posts/a/01.jpg'), false);
   assert.equal(isGalleryPhoto('/blog/posts/a/gallery/notes.txt'), false);
+});
+
+test("a photo's GPS is where it was taken, none without", async () => {
+  const photos = join(
+    import.meta.dirname,
+    '../fixtures/content/posts/2023-08-04-a-scramble/gallery',
+  );
+
+  assert.deepEqual(
+    await positionOf(join(photos, '01 - The first photo.jpg')),
+    [46.63687, 7.9778],
+  );
+  assert.equal(
+    await positionOf(join(photos, 'The third photo.jpg')),
+    undefined,
+  );
 });

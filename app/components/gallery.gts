@@ -10,6 +10,7 @@ import { modifier } from 'ember-modifier';
 import { t } from 'ember-intl';
 
 import { largestUrl, srcsetOf } from '../content/photo.ts';
+import { SHOW_PHOTO } from '../content/route-map.ts';
 
 import type { GalleryPhoto } from '../content/gallery.ts';
 
@@ -21,14 +22,27 @@ const showModal = modifier((dialog: HTMLDialogElement) => {
   };
 });
 
+// A photo's pin on the route's map asks for it (app/content/route-map.ts)
+const onShowPhoto = modifier(
+  (_: HTMLElement, [show]: [(index: number) => void]) => {
+    const listener = (event: Event) =>
+      show((event as CustomEvent<number>).detail);
+
+    window.addEventListener(SHOW_PHOTO, listener);
+
+    return () => window.removeEventListener(SHOW_PHOTO, listener);
+  },
+);
+
 // How far a finger has to move to change the photo
 const SWIPE = 50;
 
 /**
  * The photos of a post's gallery folder at the end of the article: a masonry grid of
  * thumbnails, each a link to the full photo, which opens in a full-screen
- * <dialog> instead. ← → or a swipe change the photo; Esc, the close button
- * or a click beside the photo closes it.
+ * <dialog> instead, as does a photo's pin on the route's map. ← → or a
+ * swipe change the photo; Esc, the close button or a click beside the
+ * photo closes it.
  */
 export class Gallery extends Component<{
   Args: { photos: GalleryPhoto[] };
@@ -57,6 +71,10 @@ export class Gallery extends Component<{
 
     event.preventDefault();
     this.current = index;
+  }
+
+  @action show(index: number) {
+    if (this.args.photos[index]) this.current = index;
   }
 
   @action close() {
@@ -91,7 +109,12 @@ export class Gallery extends Component<{
   }
 
   <template>
-    <section class="mt-16" aria-labelledby="gallery-title" data-test-gallery>
+    <section
+      class="mt-16"
+      aria-labelledby="gallery-title"
+      data-test-gallery
+      {{onShowPhoto this.show}}
+    >
       <h2 id="gallery-title" class="section-heading">
         {{t "post.gallery.heading"}}
       </h2>

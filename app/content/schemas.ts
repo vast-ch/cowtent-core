@@ -37,6 +37,16 @@ export const PageSchema = withDefaults({
 
 export const schemas = [PostSchema, PageSchema];
 
+/** A place on the way (facts.points); latitude and longitude put a pin on the map */
+export interface Point {
+  name: string;
+  /** m */
+  altitude?: number;
+  link?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
 /**
  * The `facts:` front matter, read at build time by lib/facts.mjs.
  */
@@ -45,8 +55,8 @@ export interface Facts {
   grade?: string;
   /** 1 to 5 stars */
   rating?: number;
-  /** Places on the way, in order; altitude in m */
-  points?: { name: string; altitude?: number; link?: string }[];
+  /** Places on the way, in order; altitude in m; latitude and longitude for a pin */
+  points?: Point[];
   /** km */
   distance?: number;
   /** m */

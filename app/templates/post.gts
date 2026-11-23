@@ -118,7 +118,11 @@ const Neighbour: TOC<{
           {{/if}}
 
           {{#if post.html}}
-            <Prose @html={{post.html}} />
+            <Prose
+              @html={{post.html}}
+              @points={{post.facts.points}}
+              @photos={{@model.gallery}}
+            />
           {{/if}}
 
           {{#if @model.gallery.length}}

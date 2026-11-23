@@ -14,6 +14,8 @@ facts:
       altitude: 900
     - name: "The top"
       altitude: 2650
+      latitude: 46.6511
+      longitude: 7.9922
   distance: 12.5
   ascent: 1750
   duration: "5:36"

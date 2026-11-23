@@ -135,7 +135,9 @@ module('Acceptance | blog', function (hooks) {
     await visit(SCRAMBLE);
 
     const sources = [
-      ...document.querySelectorAll('.prose img, [data-test-gallery] img'),
+      ...document.querySelectorAll(
+        '.prose img:not(.route-map img), [data-test-gallery] img',
+      ),
     ].map((img) => img.getAttribute('src') ?? '');
 
     assert.strictEqual(sources.length, 4);
@@ -476,22 +478,35 @@ module('Acceptance | blog', function (hooks) {
     }
   });
 
-  test('an embedded GPX is the route on the swisstopo map', async function (assert) {
+  test('an embedded GPX is the route on a map, with the points and photos', async function (assert) {
     await visit(SCRAMBLE);
 
     assert
-      .dom('figure.route iframe')
-      .hasAttribute('title', 'Up the gully')
-      .hasAttribute(
-        'src',
-        /^https:\/\/map\.geo\.admin\.ch\/#\/embed\?lang=en&/,
-      );
+      .dom('figure.route .route-map')
+      .hasClass('leaflet-container', 'the map is drawn')
+      .hasAttribute('aria-label', 'Up the gully');
+    assert
+      .dom('.route-map .route-point')
+      .exists({ count: 1 }, 'the point with a latitude and longitude');
+    assert
+      .dom('.route-map .route-photo')
+      .exists({ count: 1 }, 'the photo with GPS')
+      .hasAttribute('title', 'The first photo');
     assert
       .dom('figure.route figcaption a[download]')
       .hasText('Download the GPX');
     assert
-      .dom('.prose a:not([download])[href$=".gpx"]')
+      .dom('figure.route figcaption a[href^="https://map.geo.admin.ch/#/map?"]')
+      .hasText('map.geo.admin.ch');
+    assert
+      .dom('.prose p > a[href$=".gpx"]')
       .hasText('the GPX file', 'a linked GPX stays a link');
+
+    await click('.route-map .route-photo');
+
+    assert
+      .dom('[data-test-lightbox] img')
+      .hasAttribute('alt', 'The first photo', "the photo's pin opens it");
   });
 
   test('a list item with a symbol in brackets gets its badge', async function (assert) {

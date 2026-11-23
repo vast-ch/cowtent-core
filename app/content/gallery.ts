@@ -6,6 +6,8 @@ export interface GalleryPhoto {
   photo: ImageData;
   /** The photo's file name, also its alt text (lib/gallery.mjs) */
   caption: string;
+  /** [lat, lon] from its GPS, for its pin on the route's map */
+  position: [number, number] | null;
 }
 
 /**
