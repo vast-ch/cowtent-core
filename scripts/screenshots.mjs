@@ -3,7 +3,8 @@
 //
 //   pnpm screenshots
 //
-// A new view to show is a new line in SHOTS here, and in the README.
+// A new theme (lib/themes.mjs) gets its screenshot by itself, and needs its
+// heading and image in the README.
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
@@ -18,21 +19,9 @@ const dist = join(core, 'dist');
 const out = join(core, 'docs/screenshots');
 
 const DESKTOP = { viewport: { width: 1440, height: 900 } };
-const PHONE = {
-  viewport: { width: 390, height: 844 },
-  deviceScaleFactor: 2,
-  isMobile: true,
-  hasTouch: true,
-};
 
-// name, page, device, theme (a visitor's pick, the blog's own without)
-const SHOTS = [
-  ['list-desktop', '/', DESKTOP],
-  ['post-desktop', '/2023-08-04-a-scramble', DESKTOP],
-  ['list-phone', '/', PHONE],
-  ['post-phone', '/2023-08-04-a-scramble', PHONE],
-  ...THEMES.map((theme) => [`theme-${theme}`, '/', DESKTOP, theme]),
-];
+// name, page, device, theme (a visitor's pick)
+const SHOTS = THEMES.map((theme) => [`theme-${theme}`, '/', DESKTOP, theme]);
 
 const built = spawnSync('pnpm', ['build'], { cwd: core, stdio: 'inherit' });
 
@@ -87,11 +76,9 @@ for (const [name, path, device, theme] of SHOTS) {
   page.on('pageerror', (error) => errors.push(error.message));
 
   // In the page: the theme a visitor picked on an earlier page
-  if (theme) {
-    await page.addInitScript(
-      `localStorage.setItem(${JSON.stringify(`cowtent-theme:${base}`)}, ${JSON.stringify(theme)})`,
-    );
-  }
+  await page.addInitScript(
+    `localStorage.setItem(${JSON.stringify(`cowtent-theme:${base}`)}, ${JSON.stringify(theme)})`,
+  );
 
   await page.goto(`${origin}${base}${path.slice(1)}`, {
     waitUntil: 'networkidle',

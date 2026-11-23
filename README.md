@@ -16,25 +16,18 @@ Version 0.2.0, see [CHANGELOG.md](CHANGELOG.md).
 
 ## Screenshots
 
-The dummy blog of the tests (`tests/fixtures/content/`) in the default
-theme, `alps`: the front page and a post.
+The front page of the dummy blog of the tests (`tests/fixtures/content/`)
+in each theme.
 
-| Desktop                                                           | Phone                                                         |
-| ----------------------------------------------------------------- | ------------------------------------------------------------- |
-| ![The front page on a desktop](docs/screenshots/list-desktop.png) | ![The front page on a phone](docs/screenshots/list-phone.png) |
-| ![A post on a desktop](docs/screenshots/post-desktop.png)         | ![A post on a phone](docs/screenshots/post-phone.png)         |
-
-### Themes
-
-`alps`
+### alps
 
 ![The front page in alps](docs/screenshots/theme-alps.png)
 
-`basecamp`
+### basecamp
 
 ![The front page in basecamp](docs/screenshots/theme-basecamp.png)
 
-`night`
+### night
 
 ![The front page in night](docs/screenshots/theme-night.png)
 
@@ -143,6 +136,6 @@ BLOG_CONTENT=../cowtent-starter node bin/cowtent.mjs start
 ```
 
 `pnpm screenshots` makes the screenshots above anew from the dummy blog, in
-the Chrome that's installed, and overwrites `docs/screenshots/`. A new view
-to show is a line in `SHOTS` in `scripts/screenshots.mjs` and its image in
-this README.
+the Chrome that's installed, and overwrites `docs/screenshots/`
+(`scripts/screenshots.mjs`). A new theme gets its screenshot by itself; its
+heading and image in this README are added by hand.

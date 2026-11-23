@@ -17,8 +17,7 @@
   put it in (rating, altitude gain, distance, time, gradient) as chips in
   their sidebar colours, each a link to the front page filtered by it
 - **Screenshots** in the README, of the dummy blog of the tests: the front
-  page and a post on a desktop and a phone, and the front page in each
-  theme. `pnpm screenshots` makes them anew.
+  page in each theme. `pnpm screenshots` makes them anew.
 
 ## v0.1.0 - 2026-11-23
 
