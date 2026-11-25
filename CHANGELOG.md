@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.8.0 - 2026-11-25
+
+- **A photo on the map**: the full-screen photo has "Show on the map"
+  next to its close button, for a photo with GPS. It opens the map in its
+  lightbox, close to where the photo was taken, the photo ringed in the
+  blog's colour. A photo on the map opens it full screen again.
+- **The map in a lightbox**, like the photos: the button under the zoom
+  opens it large over the page, where the scroll wheel zooms it. Esc,
+  the close button or a click beside it closes it. One lightbox at a
+  time: a photo's and the map's take each other's place.
+- **Both lightboxes are Frontile's Overlay**: the focus stays in them and
+  comes back, the page doesn't scroll behind them.
+- **Switches on the map** for the route, the photos and the points, each
+  only when the map has it.
+- **The map and its lightbox are one**: moving, zooming, a photo ringed
+  or a switch on one is the same on the other.
+- **The address keeps it**: `lat`, `lng`, `zoom`, `photo`, `view` and
+  `hide`, so a link or a reload shows the same map, photo and lightbox.
+  Back closes a lightbox; moving the map isn't a step back.
+- **The route's links are in the facts**: the GPX to download and
+  map.geo.admin.ch are the last row, no longer under the map.
+- **On a phone** the map is half as tall again, its photos smaller, and a
+  tap doesn't leave one big.
+
 ## v0.7.0 - 2026-11-24
 
 - **A post's `route.gpx` is its map**, by itself: the file named exactly

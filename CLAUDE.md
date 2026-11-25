@@ -19,6 +19,10 @@ runs `cowtent build` (`bin/cowtent.mjs`).
 - The blog's `colour:` is `--blog-colour` on :root (index.html); Tailwind's
   `accent-*` shades are mixed from it (`app/styles/app.css`). Use `accent-*`,
   never a fixed colour, for anything that should follow the blog's colour.
+- A post's map and its lightboxes (`app/components/lightbox.gts`, on
+  Frontile's Overlay) show what the post's query params say
+  (`app/services/post-view.ts`); the maps only show state and report
+  what's done to them (`app/content/route-map.ts`).
 - Tag names come from the blog's site.yaml; `translations/en-us.json` has only
   the app's own (the fact filters).
 - `pnpm test` (QUnit, fixtures), `pnpm build && pnpm test:output`, `pnpm lint`.

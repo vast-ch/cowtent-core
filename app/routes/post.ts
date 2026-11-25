@@ -6,10 +6,24 @@ import { routeOf } from '../content/route.ts';
 import { allPosts, findPost } from '../content/requests.ts';
 import { orNotFound } from '../content/not-found.ts';
 
+import type PostController from '../controllers/post.ts';
 import type Store from '../services/store.ts';
 
 export default class PostRoute extends Route {
   @service declare store: Store;
+
+  // The next post starts with its whole route and no lightbox, not this one's
+  resetController(controller: PostController, isExiting: boolean) {
+    if (isExiting) {
+      controller.lat =
+        controller.lng =
+        controller.zoom =
+        controller.photo =
+        controller.view =
+        controller.hide =
+          null;
+    }
+  }
 
   async model({ post_id }: { post_id: string }) {
     return orNotFound(async () => {

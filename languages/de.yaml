@@ -69,6 +69,7 @@ post:
   # Die Tabelle vor der Geschichte (facts: des Beitrags)
   facts:
     heading: Die Fakten
+    route: Route
     date: Datum
     location: Ort
     grade: Schwierigkeit
@@ -95,6 +96,13 @@ post:
   route:
     map: Die Route
     download: GPX herunterladen
+    # Die Schalter auf der Karte für das, was sie zeigt
+    layers:
+      track: Route
+      photos: Fotos
+      points: Punkte
+    enlarge: Karte vergrössern
+    close: Schliessen
 
   # Die Fotos am Ende (der Ordner gallery des Beitrags) und die Vollbildansicht
   gallery:
@@ -102,6 +110,7 @@ post:
     close: Schliessen
     previous: Vorheriges Foto
     next: Nächstes Foto
+    onMap: Auf der Karte zeigen
 
   # Der Knopf unter einem Beitrag, und die E-Mail, die er beginnt
   # (email: in site.yaml)

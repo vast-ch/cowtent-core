@@ -115,8 +115,8 @@ const Neighbour: TOC<{
         {{/let}}
 
         <div class="mt-10 space-y-12">
-          {{#if post.facts}}
-            <Facts @facts={{post.facts}} />
+          {{#if (or post.facts @model.route)}}
+            <Facts @facts={{post.facts}} @route={{@model.route}} />
           {{/if}}
 
           {{#if post.html}}
@@ -132,7 +132,10 @@ const Neighbour: TOC<{
           {{/if}}
 
           {{#if @model.gallery.length}}
-            <Gallery @photos={{@model.gallery}} />
+            <Gallery
+              @photos={{@model.gallery}}
+              @onMap={{if @model.route true false}}
+            />
           {{/if}}
 
           {{#if site.email}}

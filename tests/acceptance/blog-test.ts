@@ -373,26 +373,25 @@ module('Acceptance | blog', function (hooks) {
 
     await click('[data-test-gallery-photo]');
 
-    assert.dom('[data-test-lightbox]').exists();
-    assert.true(
-      (document.querySelector('[data-test-lightbox]') as HTMLDialogElement)
-        .open,
-      'opens as a modal dialog',
-    );
-    assert.dom('[data-test-lightbox-position]').hasText('1 / 3');
+    assert
+      .dom('[data-test-lightbox]')
+      .exists()
+      .hasAttribute('aria-modal', 'true', 'opens as a modal dialog');
+    assert.dom('[data-test-lightbox-label]').hasText('1 / 3');
     assert.dom('[data-test-lightbox-caption]').hasAnyText();
+    assert.true(currentURL().includes('photo=1'), 'the photo in the address');
+    assert.true(currentURL().includes('view=photo'), 'open');
 
     await click('[data-test-lightbox-next]');
-    assert.dom('[data-test-lightbox-position]').hasText('2 / 3');
+    assert.dom('[data-test-lightbox-label]').hasText('2 / 3');
 
     await triggerKeyEvent('[data-test-lightbox]', 'keydown', 'ArrowLeft');
     await triggerKeyEvent('[data-test-lightbox]', 'keydown', 'ArrowLeft');
-    assert
-      .dom('[data-test-lightbox-position]')
-      .hasText('3 / 3', 'wraps around');
+    assert.dom('[data-test-lightbox-label]').hasText('3 / 3', 'wraps around');
 
     await click('[data-test-lightbox-close]');
     assert.dom('[data-test-lightbox]').doesNotExist();
+    assert.false(currentURL().includes('view='), 'and out of the address');
   });
 
   test('a post shows its facts before the story', async function (assert) {
@@ -409,6 +408,13 @@ module('Acceptance | blog', function (hooks) {
       .hasText('T6')
       .hasAttribute('href', /SAC-Wanderskala/);
     assert.dom('[data-test-fact="Links"] td').hasText('Route · Strava');
+    assert
+      .dom('[data-test-fact-route] a[download]')
+      .hasText('Download the GPX', "route.gpx's download is the last fact")
+      .hasAttribute('href', /\/route-[\w-]+\.gpx$/);
+    assert
+      .dom('[data-test-fact-route] a[href^="https://map.geo.admin.ch/#/map?"]')
+      .hasText('map.geo.admin.ch');
   });
 
   test('posts can be filtered by their facts', async function (assert) {
@@ -495,20 +501,92 @@ module('Acceptance | blog', function (hooks) {
       .exists({ count: 1 }, 'the photo with GPS')
       .hasAttribute('title', 'The first photo');
     assert
-      .dom('[data-test-route] figcaption a[download]')
-      .hasText('Download the GPX')
-      .hasAttribute('href', /\/route-[\w-]+\.gpx$/);
+      .dom('[data-test-route] .leaflet-control-layers')
+      .includesText('Route')
+      .includesText('Photos')
+      .includesText('Points');
     assert
-      .dom(
-        '[data-test-route] figcaption a[href^="https://map.geo.admin.ch/#/map?"]',
-      )
-      .hasText('map.geo.admin.ch');
+      .dom('[data-test-route] figcaption')
+      .doesNotExist('its links are in the facts');
 
     await click('[data-test-route] .route-photo');
 
     assert
       .dom('[data-test-lightbox] img')
       .hasAttribute('alt', 'The first photo', "the photo's pin opens it");
+  });
+
+  test('a photo with GPS is shown on the map, one lightbox at a time', async function (assert) {
+    await visit(SCRAMBLE);
+
+    await click('[data-test-gallery-photo]');
+    assert.dom('[data-test-lightbox-on-map]').hasText('Show on the map');
+
+    await click('[data-test-lightbox-on-map]');
+    assert.dom('[data-test-route-lightbox]').exists("the map's lightbox");
+    assert
+      .dom('[data-test-lightbox-caption]')
+      .doesNotExist("in the photo's place");
+    assert
+      .dom('.route-map-lightbox .route-photo.is-shown')
+      .hasAttribute('title', 'The first photo', 'the photo stands out on it');
+    assert
+      .dom('[data-test-route] figure .route-photo.is-shown')
+      .exists("and on the page's map");
+    assert.true(
+      ['view=map', 'photo=1', 'lat=', 'lng=', 'zoom=16'].every((part) =>
+        currentURL().includes(part),
+      ),
+      'at the photo, in the address',
+    );
+
+    await click('.route-map-lightbox .route-photo');
+    assert.dom('[data-test-route-lightbox]').doesNotExist();
+    assert
+      .dom('[data-test-lightbox] img')
+      .hasAttribute(
+        'alt',
+        'The first photo',
+        'its pin opens the photo instead',
+      );
+
+    await click('[data-test-lightbox-next]');
+    assert
+      .dom('[data-test-lightbox-on-map]')
+      .doesNotExist('a photo without GPS has no way to the map');
+  });
+
+  test("the address keeps the post's map, photo and switches", async function (assert) {
+    await visit(
+      `${SCRAMBLE}?lat=46.5&lng=8.0&zoom=15&photo=1&view=map&hide=points`,
+    );
+
+    assert.dom('[data-test-route-lightbox]').exists('the lightbox it says');
+    assert
+      .dom('.route-map-lightbox .route-photo.is-shown')
+      .exists('the photo it says');
+    assert
+      .dom('[data-test-route] .route-point')
+      .doesNotExist('without the points it switched off');
+
+    await click('[data-test-lightbox-close]');
+    assert.false(currentURL().includes('view='), 'closed');
+    assert.true(currentURL().includes('zoom=15'), 'the map where it was');
+
+    // A switch on one map is a switch on the other
+    const points = [
+      ...document.querySelectorAll<HTMLInputElement>(
+        '[data-test-route] figure .leaflet-control-layers input',
+      ),
+    ].find((input) => input.parentElement?.textContent?.includes('Points'));
+
+    await click(points!);
+    assert.dom('[data-test-route] figure .route-point').exists();
+    assert.false(currentURL().includes('hide='), 'all on again');
+
+    await click('[data-test-route] figure .route-enlarge');
+    assert.dom('[data-test-route-lightbox]').exists('the button opens it');
+    assert.dom('.route-map-lightbox .route-point').exists('the same');
   });
 
   test('a GPX embedded in the text is a map of only its track', async function (assert) {

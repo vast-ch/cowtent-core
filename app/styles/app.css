@@ -179,7 +179,20 @@ html:has(dialog[open]) {
  * the top over the page.
  */
 figure.route .route-map {
-  @apply isolate flex aspect-[16/10] w-full items-center justify-center overflow-hidden rounded-2xl bg-stone-100 font-sans;
+  @apply isolate flex aspect-[16/15] w-full items-center justify-center overflow-hidden rounded-2xl bg-stone-100 font-sans sm:aspect-[16/10];
+}
+
+/* The map in its lightbox (app/components/route.gts): the space it's given */
+.route-map.route-map-lightbox {
+  @apply isolate min-h-0 w-full flex-1 overflow-hidden rounded-xl bg-stone-100 font-sans;
+}
+
+.route-map .route-enlarge {
+  @apply flex! items-center justify-center text-stone-800;
+
+  & svg {
+    @apply size-4;
+  }
 }
 
 .route-map .route-line {
@@ -205,9 +218,20 @@ figure.route .route-map {
     @apply size-full! cursor-pointer rounded-full object-cover shadow-md ring-2 ring-white transition-transform duration-200;
   }
 
-  &:hover img,
+  /* Only with a mouse: a tap would leave it big */
+  @media (hover: hover) {
+    &:hover img {
+      @apply scale-[1.6];
+    }
+  }
+
   &:focus-visible img {
     @apply scale-[1.6];
+  }
+
+  /* Shown on the map from the gallery */
+  &.is-shown img {
+    @apply ring-4 ring-accent-600;
   }
 }
 

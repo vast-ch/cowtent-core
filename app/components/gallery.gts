@@ -1,66 +1,62 @@
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { action } from '@ember/object';
+import { service } from '@ember/service';
 import Component from '@glimmer/component';
-import { tracked } from '@glimmer/tracking';
 
 import { ResponsiveImage } from '@responsive-image/ember';
-import { modifier } from 'ember-modifier';
 
 import { t } from 'ember-intl';
 
 import { largestUrl, srcsetOf } from '../content/photo.ts';
-import { SHOW_PHOTO } from '../content/route-map.ts';
+import { LIGHTBOX_BUTTON, Lightbox } from './lightbox.gts';
 
 import type { GalleryPhoto } from '../content/gallery.ts';
-
-const showModal = modifier((dialog: HTMLDialogElement) => {
-  dialog.showModal();
-
-  return () => {
-    if (dialog.open) dialog.close();
-  };
-});
-
-// A photo's pin on the route's map asks for it (app/content/route-map.ts)
-const onShowPhoto = modifier(
-  (_: HTMLElement, [show]: [(index: number) => void]) => {
-    const listener = (event: Event) =>
-      show((event as CustomEvent<number>).detail);
-
-    window.addEventListener(SHOW_PHOTO, listener);
-
-    return () => window.removeEventListener(SHOW_PHOTO, listener);
-  },
-);
+import type PostViewService from '../services/post-view.ts';
 
 // How far a finger has to move to change the photo
 const SWIPE = 50;
+
+// The pin on a photo that the route's map has too
+const PIN_PATH =
+  'M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11zm0-8.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z';
 
 /**
  * The photos of a post's gallery folder at the end of the article: a masonry grid of
  * thumbnails, each a link to the full photo, which opens in a full-screen
  * <dialog> instead, as does a photo's pin on the route's map. ← → or a
  * swipe change the photo; Esc, the close button or a click beside the
- * photo closes it.
+ * photo closes it. With a route map (`@onMap`), a photo that knows where
+ * it was taken has a button in the full-screen view that shows it there,
+ * in the map's lightbox (app/content/route-map.ts).
  */
 export class Gallery extends Component<{
-  Args: { photos: GalleryPhoto[] };
+  Args: { photos: GalleryPhoto[]; onMap?: boolean };
 }> {
-  @tracked current: number | null = null;
+  @service declare postView: PostViewService;
 
   touchX = 0;
+
+  get current() {
+    return this.postView.view === 'photo'
+      ? (this.postView.photo ?? null)
+      : null;
+  }
 
   get item() {
     return this.current === null ? undefined : this.args.photos[this.current];
   }
 
   get position() {
-    return (this.current ?? 0) + 1;
+    return `${(this.current ?? 0) + 1} / ${this.args.photos.length}`;
   }
 
   get hasMany() {
     return this.args.photos.length > 1;
+  }
+
+  get itemOnMap() {
+    return Boolean(this.args.onMap && this.item?.position);
   }
 
   @action open(index: number, event: MouseEvent) {
@@ -70,32 +66,32 @@ export class Gallery extends Component<{
     }
 
     event.preventDefault();
-    this.current = index;
-  }
-
-  @action show(index: number) {
-    if (this.args.photos[index]) this.current = index;
+    this.postView.showPhoto(index);
   }
 
   @action close() {
-    this.current = null;
+    this.postView.close();
+  }
+
+  /** The map's lightbox in the photo's place, zoomed in on it */
+  @action showOnMap() {
+    if (this.current !== null && this.item) {
+      this.postView.showMap({
+        index: this.current,
+        position: this.item.position,
+      });
+    }
   }
 
   @action step(by: number) {
     const count = this.args.photos.length;
 
-    this.current = ((this.current ?? 0) + by + count) % count;
+    this.postView.showPhoto(((this.current ?? 0) + by + count) % count);
   }
 
   @action key(event: KeyboardEvent) {
     if (event.key === 'ArrowRight') this.step(1);
     if (event.key === 'ArrowLeft') this.step(-1);
-  }
-
-  @action closeBeside(event: MouseEvent) {
-    if ((event.target as HTMLElement).hasAttribute('data-beside')) {
-      this.close();
-    }
   }
 
   @action touchStart(event: TouchEvent) {
@@ -109,12 +105,7 @@ export class Gallery extends Component<{
   }
 
   <template>
-    <section
-      class="mt-16"
-      aria-labelledby="gallery-title"
-      data-test-gallery
-      {{onShowPhoto this.show}}
-    >
+    <section class="mt-16" aria-labelledby="gallery-title" data-test-gallery>
       <h2 id="gallery-title" class="section-heading">
         {{t "post.gallery.heading"}}
       </h2>
@@ -142,50 +133,33 @@ export class Gallery extends Component<{
         {{/each}}
       </ul>
 
-      {{#if this.item}}
-        {{! Arrow keys page through the photos of the modal dialog }}
-        {{! template-lint-disable no-invalid-interactive }}
-        <dialog
-          class="m-0 h-dvh max-h-none w-screen max-w-none bg-slate-950/95 p-0 text-white backdrop:bg-transparent"
-          aria-label={{t "post.gallery.heading"}}
-          data-test-lightbox
-          {{showModal}}
-          {{on "close" this.close}}
-          {{on "keydown" this.key}}
-          {{on "touchstart" this.touchStart passive=true}}
-          {{on "touchend" this.touchEnd}}
-        >
-          {{! A mouse shortcut for Esc and the close button }}
-          <div
-            class="flex h-full flex-col"
-            data-beside
-            {{on "click" this.closeBeside}}
-          >
-            <div
-              class="flex items-center justify-between px-4 py-3 font-mono text-sm text-slate-300"
-              data-beside
+      <Lightbox
+        @isOpen={{if this.item true false}}
+        @onClose={{this.close}}
+        @label={{this.position}}
+        @closeLabel={{t "post.gallery.close"}}
+        {{on "keydown" this.key}}
+        {{on "touchstart" this.touchStart passive=true}}
+        {{on "touchend" this.touchEnd}}
+      >
+        <:bar>
+          {{#if this.itemOnMap}}
+            <button
+              type="button"
+              class="{{LIGHTBOX_BUTTON}}
+                flex items-center gap-1.5 px-3 py-2 font-sans"
+              data-test-lightbox-on-map
+              {{on "click" this.showOnMap}}
             >
-              <span data-test-lightbox-position>{{this.position}}
-                /
-                {{@photos.length}}</span>
-              <button
-                type="button"
-                class="rounded-full p-2 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white"
-                aria-label={{t "post.gallery.close"}}
-                data-test-lightbox-close
-                {{on "click" this.close}}
-              >
-                <svg viewBox="0 0 24 24" class="size-6" aria-hidden="true">
-                  <path
-                    d="M6 6l12 12M18 6L6 18"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                  />
-                </svg>
-              </button>
-            </div>
-
+              <svg viewBox="0 0 24 24" class="size-5" aria-hidden="true">
+                <path d={{PIN_PATH}} fill="currentColor" fill-rule="evenodd" />
+              </svg>
+              {{t "post.gallery.onMap"}}
+            </button>
+          {{/if}}
+        </:bar>
+        <:default>
+          {{#if this.item}}
             <figure
               class="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 px-4 pb-4 sm:px-16"
               data-beside
@@ -210,7 +184,8 @@ export class Gallery extends Component<{
             {{#if this.hasMany}}
               <button
                 type="button"
-                class="absolute top-1/2 left-2 hidden -translate-y-1/2 rounded-full p-3 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white sm:block"
+                class="{{LIGHTBOX_BUTTON}}
+                  absolute top-1/2 left-2 hidden -translate-y-1/2 p-3 sm:block"
                 aria-label={{t "post.gallery.previous"}}
                 {{on "click" (fn this.step -1)}}
               >
@@ -226,7 +201,8 @@ export class Gallery extends Component<{
               </button>
               <button
                 type="button"
-                class="absolute top-1/2 right-2 hidden -translate-y-1/2 rounded-full p-3 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white sm:block"
+                class="{{LIGHTBOX_BUTTON}}
+                  absolute top-1/2 right-2 hidden -translate-y-1/2 p-3 sm:block"
                 aria-label={{t "post.gallery.next"}}
                 data-test-lightbox-next
                 {{on "click" (fn this.step 1)}}
@@ -242,10 +218,9 @@ export class Gallery extends Component<{
                 </svg>
               </button>
             {{/if}}
-          </div>
-        </dialog>
-        {{! template-lint-enable no-invalid-interactive }}
-      {{/if}}
+          {{/if}}
+        </:default>
+      </Lightbox>
     </section>
   </template>
 }

@@ -67,6 +67,7 @@ post:
   # The table before the story (the post's facts:)
   facts:
     heading: The facts
+    route: Route
     date: Date
     location: Location
     grade: Grade
@@ -93,6 +94,13 @@ post:
   route:
     map: The route
     download: Download the GPX
+    # The switches on the map for what it shows
+    layers:
+      track: Route
+      photos: Photos
+      points: Points
+    enlarge: Enlarge the map
+    close: Close
 
   # The photos at the end (the post's gallery folder) and the full-screen view
   gallery:
@@ -100,6 +108,7 @@ post:
     close: Close
     previous: Previous photo
     next: Next photo
+    onMap: Show on the map
 
   # The button under a post, and the email it starts (site.yaml's email:)
   feedback:

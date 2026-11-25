@@ -14,7 +14,7 @@ const routeMaps = modifier((element: HTMLElement) => {
   );
 
   return () => {
-    for (const map of maps) void map.then((remove) => remove());
+    for (const map of maps) void map.then((m) => m.remove());
   };
 });
 
