@@ -233,10 +233,11 @@ export function profileChart(
   locale?: string,
 ): ProfileChart {
   const { points, distance: total, lowest, highest } = profile;
-  // A little room above and below the relief, and never flatter than 100 m
+  // A little room above and below the relief, and never flatter than 100 m;
+  // the photos' pins have their own room above it
   const span = Math.max(highest - lowest, 100);
   const bottom = lowest - span * 0.08;
-  const top = bottom + span * 1.25;
+  const top = bottom + span * 1.12;
   const x = (distance: number) => (distance / total) * 100;
   const y = (elevation: number) => ((top - elevation) / (top - bottom)) * 100;
 
@@ -264,6 +265,13 @@ export function profileChart(
       <path class="route-relief-walked" d="${line}L100 100L0 100Z"/>
       <path class="route-relief-line" d="${line}"/>
     </svg>`;
+
+  // The relief and what's on it, under the room for the pins
+  const plot = document.createElement('div');
+
+  plot.className = 'route-profile-plot';
+  plot.append(...chart.childNodes);
+  chart.append(plot);
 
   const walked = chart.querySelector<SVGPathElement>('.route-relief-walked')!;
   const cursor = document.createElement('span');
@@ -305,22 +313,26 @@ export function profileChart(
     toClimb.item,
   );
 
-  // The photos taken close to the track, standing on the relief
+  // The photos taken close to the track, on pins like the map's, the tip
+  // on the relief where it was
   const thumbs = photos.map(({ index, src, caption, distance }) => {
     const thumb = document.createElement('button');
+    const bubble = document.createElement('span');
     const img = document.createElement('img');
-    const elevation = pointAt(profile, distance).elevation;
+    const tip = document.createElement('span');
 
     thumb.type = 'button';
     thumb.className = 'route-profile-photo';
     thumb.title = caption;
     thumb.setAttribute('aria-label', caption);
     thumb.style.left = `${x(distance)}%`;
-    // On the relief, but inside the strip
-    thumb.style.top = `max(${y(elevation)}%, 1.75rem)`;
+    thumb.style.top = `${y(pointAt(profile, distance).elevation)}%`;
+    bubble.className = 'route-bubble';
+    tip.className = 'route-tip';
     img.src = src;
     img.alt = '';
-    thumb.append(img);
+    bubble.append(img, tip);
+    thumb.append(bubble);
     thumb.addEventListener('click', (event) => {
       event.stopPropagation();
       on.photo(index);
@@ -329,7 +341,8 @@ export function profileChart(
     return { thumb, index };
   });
 
-  chart.append(cursor, dot, ...thumbs.map(({ thumb }) => thumb));
+  chart.append(cursor);
+  plot.append(...thumbs.map(({ thumb }) => thumb), dot);
 
   // The highest and the lowest, in the relief's top and bottom corners
   const scale = document.createElement('div');
@@ -344,7 +357,7 @@ export function profileChart(
     scale.append(mark);
   }
 
-  chart.append(scale);
+  plot.append(scale);
   element.append(play, chart, numbers);
 
   // Where the walk is (or was paused), and the spot hovered
@@ -441,11 +454,6 @@ export function profileChart(
     hovered = undefined;
     showAt(position);
   });
-  // A click there is where the walk goes on from
-  chart.addEventListener('click', (event) => {
-    position = along(event);
-    showAt(position);
-  });
 
   playing(false);
 
@@ -460,6 +468,8 @@ export function profileChart(
         hovered = undefined;
         showAt(undefined);
       }
+
+      element.classList.toggle('with-photos', withPhotos && thumbs.length > 0);
 
       for (const { thumb, index } of thumbs) {
         thumb.hidden = !withPhotos;

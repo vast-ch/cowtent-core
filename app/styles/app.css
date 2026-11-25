@@ -217,14 +217,19 @@ figure.route .route-map {
 
 /*
  * A photo where it was taken: in a round bubble on a pin, the pin's tip on
- * the place (app/content/route-map.ts). Under the mouse it grows up from
- * the tip, never over the place.
+ * the place (app/content/route-map.ts), on the map and on its profile.
+ * On the map, under the mouse it grows up from the tip, never over the
+ * place; on the profile, nothing happens to it, so it never flickers.
  */
-.route-map .route-photo {
+.route-map :is(.route-photo, .route-profile-photo) {
   @apply block cursor-pointer;
 
   & .route-bubble {
-    @apply flex origin-bottom flex-col items-center drop-shadow-md transition-transform duration-200;
+    @apply flex origin-bottom flex-col items-center drop-shadow-md;
+  }
+
+  &.route-photo .route-bubble {
+    @apply transition-transform duration-200;
   }
 
   & img {
@@ -238,12 +243,12 @@ figure.route .route-map {
 
   /* Only with a mouse: a tap would leave it big */
   @media (hover: hover) {
-    &:hover .route-bubble {
+    &.route-photo:hover .route-bubble {
       @apply scale-[1.6];
     }
   }
 
-  &:focus-visible .route-bubble {
+  &.route-photo:focus-visible .route-bubble {
     @apply scale-[1.6];
   }
 
@@ -290,6 +295,15 @@ figure.route .route-map {
 
   @media (width >= 640px) {
     --profile-height: 7rem;
+  }
+
+  /* Higher by the room for the photos' pins */
+  &:has(.route-profile.with-photos) {
+    --profile-height: 7.25rem;
+
+    @media (width >= 640px) {
+      --profile-height: 9rem;
+    }
   }
 }
 
@@ -370,31 +384,32 @@ figure.route .route-map {
 }
 
 .route-profile-cursor {
-  @apply inset-y-0 w-px -translate-x-1/2 bg-stone-900/60;
+  @apply inset-y-0 z-[2] w-px -translate-x-1/2 bg-stone-900/60;
 }
 
+/* The spot itself, over everything else on the strip */
 .route-profile-dot {
-  @apply size-3 -translate-1/2 rounded-full bg-accent-600 ring-2 ring-white;
+  @apply z-[3] size-3.5 -translate-1/2 rounded-full bg-accent-600 ring-2 ring-white;
 }
 
-/* A photo taken close to the track, standing on the relief where it was */
-.route-profile-photo {
-  @apply absolute z-[1] block size-6 -translate-x-1/2 -translate-y-full cursor-pointer rounded-full drop-shadow transition-transform duration-200 sm:size-7;
+/* The relief, under the room for the photos' pins when they're shown */
+.route-profile-plot {
+  @apply absolute inset-x-0 top-0 bottom-0;
 
-  transform-origin: bottom;
-
-  & img {
-    @apply size-full rounded-full object-cover ring-2 ring-white;
+  .with-photos & {
+    @apply top-7 sm:top-10;
   }
+}
 
-  @media (hover: hover) {
-    &:hover {
-      @apply scale-150;
-    }
-  }
+/*
+ * A photo taken close to the track, on a pin like the map's: its tip on
+ * the relief where it was (the bubble's look is the map's, above)
+ */
+.route-map .route-profile-photo {
+  @apply absolute z-[1] w-5 -translate-x-1/2 -translate-y-full sm:w-8;
 
-  &.is-shown img {
-    @apply ring-accent-600;
+  & .route-tip {
+    @apply border-x-[4px] border-t-[6px] sm:border-x-[5px] sm:border-t-[8px];
   }
 
   &[hidden] {
@@ -409,8 +424,14 @@ figure.route .route-map {
 .route-profile-numbers {
   @apply pointer-events-none invisible absolute bottom-full mb-2 grid grid-cols-2 gap-x-3 gap-y-0.5 rounded-lg bg-stone-900/90 px-2.5 py-1.5 text-xs whitespace-nowrap text-white tabular-nums shadow-lg;
 
+  --numbers-width: 10.5rem;
+
   /* Over the spot, kept inside the strip */
-  left: clamp(0%, calc(var(--at, 0) * 1% - 5rem), calc(100% - 10.5rem));
+  left: clamp(
+    0%,
+    calc(var(--at, 0) * 1% - var(--numbers-width) / 2),
+    calc(100% - var(--numbers-width))
+  );
 
   .is-at & {
     @apply visible;

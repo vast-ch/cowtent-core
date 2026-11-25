@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.13.2 - 2026-11-26
+
+- **The profile's photos are pins like the map's**, the tip on the relief
+  where each was taken, in room kept above the highest point; the spot's
+  dot stays over them. Hovering a pin does nothing to it, and the spot's
+  numbers are only the numbers.
+- A click on the profile no longer moves where the walk goes on from.
+
 ## v0.13.1 - 2026-11-25
 
 - **The gallery's arrows on a phone too**: in the full-screen photo they
