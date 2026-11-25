@@ -10,7 +10,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { readAll } from '../../lib/content.mjs';
-import { galleryOf } from '../../lib/gallery.mjs';
+import { photosOf } from '../../lib/cover.mjs';
 import { readSite } from '../../lib/site.mjs';
 
 const root = resolve(process.env.BLOG_CONTENT ?? '.');
@@ -71,7 +71,7 @@ for (const post of posts) {
 
     // The gallery folder, each photo a link to its largest JPEG
     // (1440 px, or less for a smaller original)
-    const gallery = galleryOf(dirname(post.path));
+    const gallery = photosOf(dirname(post.path));
     const links = html.match(/<a [^>]*data-test-gallery-photo[^>]*>/g) ?? [];
 
     assert.equal(links.length, gallery.length, 'gallery photos');

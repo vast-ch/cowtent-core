@@ -22,9 +22,9 @@ const PIN_PATH =
   'M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11zm0-8.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z';
 
 /**
- * The photos of a post's gallery folder at the end of the article: a masonry grid of
- * thumbnails, each a link to the full photo, which opens in a full-screen
- * <dialog> instead, as does a photo's pin on the route's map. ← → or a
+ * The photos of a post at the end of the article, its cover first, then
+ * its gallery folder's (lib/cover.mjs): a masonry grid of thumbnails, each
+ * a link to the full photo, which opens in a full-screen lightbox instead, as does a photo's pin on the route's map. ← → or a
  * swipe change the photo; Esc, the close button or a click beside the
  * photo closes it. With a route map (`@onMap`), a photo that knows where
  * it was taken has a button in the full-screen view that shows it there,

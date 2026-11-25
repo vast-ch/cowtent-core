@@ -1,10 +1,17 @@
 # Changelog
 
+## v0.9.0 - 2026-11-25
+
+- **The cover is in the gallery**: a post's cover is its gallery's first
+  photo, its alt text the caption, then the `gallery` folder's. With GPS
+  it's on the route's map too. A post with a cover and no gallery folder
+  has a gallery of one. The RSS feed's gallery is the same.
+
 ## v0.8.1 - 2026-11-25
 
 - **`pnpm test:output` checks the build where `cowtent build` writes
   it**: `dist` in the folder it runs from, so `pnpm build && pnpm
-  test:output` passes without setting `BLOG_OUT`.
+test:output` passes without setting `BLOG_OUT`.
 
 ## v0.8.0 - 2026-11-25
 

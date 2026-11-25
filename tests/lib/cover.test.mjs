@@ -1,10 +1,10 @@
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { coverOf, isCoverPhoto } from '../../lib/cover.mjs';
+import { coverOf, isCoverPhoto, photosOf } from '../../lib/cover.mjs';
 
 function post(...files) {
   const dir = mkdtempSync(join(tmpdir(), 'cowtent-cover-'));
@@ -62,4 +62,20 @@ test('the dev server knows a cover photo', () => {
   assert.equal(isCoverPhoto('/blog/posts/a/cover.png'), true);
   assert.equal(isCoverPhoto('/blog/posts/a/01.jpg'), false);
   assert.equal(isCoverPhoto('/blog/posts/a/cover.md'), false);
+});
+
+test("the gallery is the cover, then the gallery folder's photos", () => {
+  const dir = post('index.md', 'Cover - The ridge.jpg');
+
+  mkdirSync(join(dir, 'gallery'));
+  writeFileSync(join(dir, 'gallery', '01 - The start.jpg'), '');
+
+  assert.deepEqual(photosOf(dir), [
+    { src: './Cover - The ridge.jpg', caption: 'The ridge' },
+    { src: './gallery/01 - The start.jpg', caption: 'The start' },
+  ]);
+  assert.deepEqual(photosOf(post('index.md', 'cover.jpg')), [
+    { src: './cover.jpg', caption: '' },
+  ]);
+  assert.deepEqual(photosOf(post('index.md')), [], 'none without either');
 });

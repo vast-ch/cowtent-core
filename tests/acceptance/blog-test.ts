@@ -140,7 +140,7 @@ module('Acceptance | blog', function (hooks) {
       ),
     ].map((img) => img.getAttribute('src') ?? '');
 
-    assert.strictEqual(sources.length, 4);
+    assert.strictEqual(sources.length, 5);
     assert.true(
       sources.every((src) => !src.startsWith('./') && !src.includes('__ASSET')),
       sources.join(', '),
@@ -351,7 +351,7 @@ module('Acceptance | blog', function (hooks) {
     assert.dom('img[data-test-cover]').doesNotExist('no photo, no cover');
   });
 
-  test('the gallery folder: file names are the captions, in the order of their numbers, " - " or a space after them', async function (assert) {
+  test('the gallery: the cover first, then the gallery folder, its file names the captions, in the order of their numbers', async function (assert) {
     await visit(SCRAMBLE);
 
     const alts = [
@@ -359,6 +359,7 @@ module('Acceptance | blog', function (hooks) {
     ].map((img) => img.getAttribute('alt'));
 
     assert.deepEqual(alts, [
+      'Hands on the rock',
       'The first photo',
       'A grey ridge under cloud',
       'The third photo',
@@ -368,7 +369,7 @@ module('Acceptance | blog', function (hooks) {
   test('a photo from the gallery opens in a lightbox', async function (assert) {
     await visit(SCRAMBLE);
 
-    assert.dom('[data-test-gallery-photo]').exists({ count: 3 });
+    assert.dom('[data-test-gallery-photo]').exists({ count: 4 });
     assert.dom('[data-test-lightbox]').doesNotExist();
 
     await click('[data-test-gallery-photo]');
@@ -377,17 +378,17 @@ module('Acceptance | blog', function (hooks) {
       .dom('[data-test-lightbox]')
       .exists()
       .hasAttribute('aria-modal', 'true', 'opens as a modal dialog');
-    assert.dom('[data-test-lightbox-label]').hasText('1 / 3');
+    assert.dom('[data-test-lightbox-label]').hasText('1 / 4');
     assert.dom('[data-test-lightbox-caption]').hasAnyText();
     assert.true(currentURL().includes('photo=1'), 'the photo in the address');
     assert.true(currentURL().includes('view=photo'), 'open');
 
     await click('[data-test-lightbox-next]');
-    assert.dom('[data-test-lightbox-label]').hasText('2 / 3');
+    assert.dom('[data-test-lightbox-label]').hasText('2 / 4');
 
     await triggerKeyEvent('[data-test-lightbox]', 'keydown', 'ArrowLeft');
     await triggerKeyEvent('[data-test-lightbox]', 'keydown', 'ArrowLeft');
-    assert.dom('[data-test-lightbox-label]').hasText('3 / 3', 'wraps around');
+    assert.dom('[data-test-lightbox-label]').hasText('4 / 4', 'wraps around');
 
     await click('[data-test-lightbox-close]');
     assert.dom('[data-test-lightbox]').doesNotExist();
@@ -498,8 +499,8 @@ module('Acceptance | blog', function (hooks) {
       .exists({ count: 1 }, 'the point with a latitude and longitude');
     assert
       .dom('[data-test-route] .route-photo')
-      .exists({ count: 1 }, 'the photo with GPS')
-      .hasAttribute('title', 'The first photo');
+      .exists({ count: 2 }, 'the cover and the photo with GPS')
+      .hasAttribute('title', 'Hands on the rock', 'the cover first');
     assert
       .dom('[data-test-route] .leaflet-control-layers')
       .includesText('Route')
@@ -513,7 +514,7 @@ module('Acceptance | blog', function (hooks) {
 
     assert
       .dom('[data-test-lightbox] img')
-      .hasAttribute('alt', 'The first photo', "the photo's pin opens it");
+      .hasAttribute('alt', 'Hands on the rock', "the photo's pin opens it");
   });
 
   test('a photo with GPS is shown on the map, one lightbox at a time', async function (assert) {
@@ -529,7 +530,7 @@ module('Acceptance | blog', function (hooks) {
       .doesNotExist("in the photo's place");
     assert
       .dom('.route-map-lightbox .route-photo.is-shown')
-      .hasAttribute('title', 'The first photo', 'the photo stands out on it');
+      .hasAttribute('title', 'Hands on the rock', 'the photo stands out on it');
     assert
       .dom('[data-test-route] figure .route-photo.is-shown')
       .exists("and on the page's map");
@@ -546,9 +547,12 @@ module('Acceptance | blog', function (hooks) {
       .dom('[data-test-lightbox] img')
       .hasAttribute(
         'alt',
-        'The first photo',
+        'Hands on the rock',
         'its pin opens the photo instead',
       );
+
+    await click('[data-test-lightbox-next]');
+    assert.dom('[data-test-lightbox-on-map]').exists('the next one has GPS');
 
     await click('[data-test-lightbox-next]');
     assert

@@ -11,7 +11,8 @@ export interface GalleryPhoto {
 }
 
 /**
- * The photos of a post's gallery folder, resized by @responsive-image/vite-plugin.
+ * The photos of a post's gallery, its cover first (lib/cover.mjs), resized
+ * by @responsive-image/vite-plugin.
  * They are an export of the post's HTML module, so they load with it,
  * and stay out of the store like the covers (app/content/covers.ts).
  */
