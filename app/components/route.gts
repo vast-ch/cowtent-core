@@ -27,7 +27,11 @@ interface DrawMapSignature {
   Element: HTMLElement;
   Args: {
     Positional: [Point[] | undefined, GalleryPhoto[] | undefined, LayerLabels];
-    Named: { state: MapState; on: MapEvents; inLightbox?: boolean };
+    Named: {
+      state: MapState;
+      on: MapEvents;
+      inLightbox?: boolean;
+    };
   };
 }
 
@@ -101,6 +105,8 @@ export class Route extends Component<{
         photos=(t "post.route.layers.photos")
         points=(t "post.route.layers.points")
         enlarge=(t "post.route.enlarge")
+        threeD=(t "post.route.three-d")
+        flat=(t "post.route.flat")
       )
       as |labels|
     }}

@@ -18,6 +18,8 @@ export default class PostRoute extends Route {
       controller.lat =
         controller.lng =
         controller.zoom =
+        controller.pitch =
+        controller.bearing =
         controller.photo =
         controller.view =
         controller.hide =

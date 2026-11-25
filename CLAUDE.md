@@ -22,7 +22,10 @@ runs `cowtent build` (`bin/cowtent.mjs`).
 - A post's map and its lightboxes (`app/components/lightbox.gts`, on
   Frontile's Overlay) show what the post's query params say
   (`app/services/post-view.ts`); the maps only show state and report
-  what's done to them (`app/content/route-map.ts`).
+  what's done to them by hand (`app/content/route-map.ts`, MapLibre, loaded
+  when the map is about to be seen). Tilted is 3D, on swisstopo's terrain
+  (`app/content/route-map-3d.ts`). Write maps the MapLibre way: layers of
+  the style for the track and points, markers only for HTML like photos.
 - Tag names come from the blog's site.yaml; `translations/en-us.json` has only
   the app's own (the fact filters).
 - `pnpm test` (QUnit, fixtures), `pnpm build && pnpm test:output`, `pnpm lint`.

@@ -1,6 +1,14 @@
 import { waitForPromise } from '@ember/test-waiters';
+import { isTesting } from '@embroider/macros';
 
-import type { Layer } from 'leaflet';
+import { terrainSource } from './route-map-3d.ts';
+
+import type {
+  IControl,
+  Map as MapLibreMap,
+  MapLayerMouseEvent,
+  Marker,
+} from 'maplibre-gl';
 import type { GalleryPhoto } from './gallery.ts';
 import type { Point } from './schemas.ts';
 
@@ -9,9 +17,9 @@ import type { Point } from './schemas.ts';
  * (https://www.geo.admin.ch/en/general-terms-of-use-fsdi); only Switzerland
  * and its borders
  */
-const TILES =
+export const TILES =
   'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg';
-const ATTRIBUTION =
+export const ATTRIBUTION =
   '<a href="https://www.swisstopo.admin.ch/" target="_blank" rel="noopener">© swisstopo</a>';
 
 /** The names of the map's switches and buttons, in the blog's language */
@@ -20,11 +28,13 @@ export interface LayerLabels {
   photos: string;
   points: string;
   enlarge: string;
+  threeD: string;
+  flat: string;
 }
 
 export type LayerName = 'track' | 'photos' | 'points';
 
-const LAYER_NAMES: LayerName[] = ['track', 'photos', 'points'];
+export const LAYER_NAMES: LayerName[] = ['track', 'photos', 'points'];
 
 /** What a map shows (app/services/post-view.ts), the whole route without a center */
 export interface MapState {
@@ -33,11 +43,18 @@ export interface MapState {
   /** The photo ringed, by its place in the gallery */
   shown?: number;
   hidden: LayerName[];
+  /** Tilted is 3D, over swisstopo's terrain; flat without */
+  pitch?: number;
+  bearing?: number;
 }
 
 /** What a map tells when it's moved, switched or clicked */
 export interface MapEvents {
-  moved?: (center: [number, number], zoom: number) => void;
+  moved?: (
+    center: [number, number],
+    zoom: number,
+    angle: { pitch: number; bearing: number },
+  ) => void;
   switched?: (hidden: LayerName[]) => void;
   photo?: (index: number) => void;
   enlarge?: () => void;
@@ -59,19 +76,88 @@ export interface Pins {
   on?: MapEvents;
 }
 
+/** How tilted the 3D button makes the map */
+const PITCH = 60;
+
+/** Around the route when the whole of it is shown */
+const PADDING = 24;
+
+// rose-600 and stone-900, as the rest of the blog
+const TRACK_COLOUR = '#e11d48';
+const POINT_RIM = '#1c1917';
+
 const EXPAND =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 const NONE: RouteMap = { apply: () => {}, remove: () => {} };
 
+/** Marks the 3D button's tilt as a move by hand, like a drag's or the zoom's */
+const BY_HAND = { byHand: true };
+
+/**
+ * Once the map is about to scroll into view: MapLibre is a big download
+ * and more to start, so a post shows and scrolls first. Tests draw it
+ * straight away.
+ */
+function nearView(element: HTMLElement) {
+  if (isTesting() || !('IntersectionObserver' in window))
+    return Promise.resolve();
+
+  return new Promise<void>((resolve) => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          observer.disconnect();
+          resolve();
+        }
+      },
+      { rootMargin: '600px' },
+    );
+
+    observer.observe(element);
+  });
+}
+
+/** A group of buttons or switches in a corner of the map */
+function control(build: (box: HTMLElement) => void, className = ''): IControl {
+  let box: HTMLElement | undefined;
+
+  return {
+    onAdd: () => {
+      box = document.createElement('div');
+      box.className = `maplibregl-ctrl maplibregl-ctrl-group ${className}`;
+      build(box);
+
+      return box;
+    },
+    onRemove: () => box?.remove(),
+  };
+}
+
+function button(className: string, html = '') {
+  const element = document.createElement('button');
+
+  element.type = 'button';
+  element.className = className;
+  element.innerHTML = html;
+
+  return element;
+}
+
+const visibility = (hidden: LayerName[], name: LayerName) =>
+  hidden.includes(name) ? 'none' : 'visible';
+
 /**
  * The route of a post on swisstopo's map, in the place of the link to it
- * that lib/route.mjs leaves in a `.route-map`: the track, a dot for every
- * point of the facts that has a latitude and longitude, and every photo of
- * the gallery that knows where it was taken as a small round photo. It
- * shows the `state` it's given, and tells `on` what's done to it: moved,
- * switched, a photo clicked, the button under the zoom to enlarge it.
- * Leaflet only loads on a page with a route, in the browser.
+ * that lib/route.mjs leaves in a `.route-map`: the track and the points of
+ * the facts with a latitude and longitude as layers of the map, every
+ * photo of the gallery that knows where it was taken as a small round
+ * photo (a marker, for its HTML). Tilted (the 3D button, or dragged), it
+ * stands on swisstopo's terrain (app/content/route-map-3d.ts). It shows
+ * the `state` it's given, and tells `on` what's done to it: moved,
+ * turned, switched, a photo clicked, the button to enlarge it. MapLibre
+ * only loads on a page with a route, in the browser, when the map is
+ * about to be seen.
  */
 export async function routeMap(
   container: HTMLElement,
@@ -80,7 +166,7 @@ export async function routeMap(
     photos = [],
     labels,
     inLightbox = false,
-    state,
+    state = { hidden: [] },
     on = {},
   }: Pins,
 ): Promise<RouteMap> {
@@ -91,216 +177,385 @@ export async function routeMap(
 
   if (!track.length) return NONE;
 
-  const [{ default: L }] = await waitForPromise(
-    Promise.all([import('leaflet'), import('leaflet/dist/leaflet.css')]),
+  await nearView(container);
+
+  const [maplibregl, { default: workerUrl }] = await waitForPromise(
+    Promise.all([
+      import('maplibre-gl'),
+      // MapLibre looks for its worker next to its own file, which the
+      // bundler moves: it's handed the worker's address instead
+      import('maplibre-gl/dist/maplibre-gl-worker.mjs?url'),
+      import('maplibre-gl/dist/maplibre-gl.css'),
+    ]),
   );
 
-  // Gone from the page while Leaflet loaded
+  // Gone from the page while MapLibre loaded
   if (!container.isConnected) return NONE;
+
+  maplibregl.setWorkerUrl(workerUrl);
+
+  const lngLat = ([lat, lng]: [number, number]): [number, number] => [lng, lat];
+  const located = points.filter(
+    (point): point is Point & { latitude: number; longitude: number } =>
+      point.latitude !== undefined && point.longitude !== undefined,
+  );
+  const placed = photos.flatMap(({ photo, caption, position }, index) =>
+    position ? [{ photo, caption, position: lngLat(position), index }] : [],
+  );
+
+  // The whole route: its track, its points and its photos
+  const bounds = new maplibregl.LngLatBounds();
+
+  for (const position of track) bounds.extend(lngLat(position));
+  for (const { longitude, latitude } of located)
+    bounds.extend([longitude, latitude]);
+  for (const { position } of placed) bounds.extend(position);
+
+  const { center, zoom, pitch = 0, bearing = 0, hidden } = state;
+  const fallback = [...container.childNodes];
 
   container.replaceChildren();
 
-  // Not the wheel on the page, which scrolls past the map; a finger pans
-  // it. Half zoom levels, so the route fits it closely.
-  const map = L.map(container, {
-    scrollWheelZoom: inLightbox,
-    zoomSnap: 0.5,
-    zoomDelta: 0.5,
-  });
+  let map: MapLibreMap;
 
-  map.attributionControl.setPrefix(false);
-  L.tileLayer(TILES, {
-    maxNativeZoom: 18,
-    maxZoom: 19,
-    attribution: ATTRIBUTION,
-  }).addTo(map);
+  try {
+    map = new maplibregl.Map({
+      container,
+      style: {
+        version: 8,
+        sources: {
+          swisstopo: {
+            type: 'raster',
+            tiles: [TILES],
+            tileSize: 256,
+            maxzoom: 18,
+            attribution: ATTRIBUTION,
+          },
+          track: {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              properties: {},
+              geometry: {
+                type: 'LineString',
+                coordinates: track.map(lngLat),
+              },
+            },
+          },
+          points: {
+            type: 'geojson',
+            data: {
+              type: 'FeatureCollection',
+              features: located.map(
+                ({ name, altitude, latitude, longitude }) => ({
+                  type: 'Feature',
+                  properties: {
+                    label:
+                      altitude === undefined ? name : `${name}, ${altitude} m`,
+                  },
+                  geometry: {
+                    type: 'Point',
+                    coordinates: [longitude, latitude],
+                  },
+                }),
+              ),
+            },
+          },
+        },
+        layers: [
+          { id: 'swisstopo', type: 'raster', source: 'swisstopo' },
+          {
+            id: 'track',
+            type: 'line',
+            source: 'track',
+            layout: {
+              'line-cap': 'round',
+              'line-join': 'round',
+              visibility: visibility(hidden, 'track'),
+            },
+            paint: { 'line-color': TRACK_COLOUR, 'line-width': 4 },
+          },
+          {
+            id: 'points',
+            type: 'circle',
+            source: 'points',
+            layout: { visibility: visibility(hidden, 'points') },
+            paint: {
+              'circle-radius': 6,
+              'circle-color': '#ffffff',
+              'circle-stroke-color': POINT_RIM,
+              'circle-stroke-width': 2.5,
+            },
+          },
+        ],
+        sky: {
+          'sky-color': '#9cc8ec',
+          'horizon-color': '#f5f5f4',
+          'sky-horizon-blend': 0.6,
+        },
+      },
+      // Where the address says, or the whole route
+      ...(center && zoom !== undefined
+        ? { center: lngLat(center), zoom }
+        : {
+            bounds,
+            fitBoundsOptions: { padding: PADDING },
+          }),
+      pitch,
+      bearing,
+      maxPitch: 85,
+      // On the page, the wheel and one finger scroll past it
+      cooperativeGestures: !inLightbox,
+      attributionControl: { compact: true },
+    });
+  } catch {
+    // No WebGL: the link to the route on map.geo.admin.ch stays
+    container.replaceChildren(...fallback);
 
-  const line = L.polyline(track, {
-    className: 'route-line',
-    interactive: false,
-  }).addTo(map);
-  const bounds = line.getBounds();
-  const pointLayer = L.layerGroup().addTo(map);
-  const photoLayer = L.layerGroup().addTo(map);
-  const layers: Record<LayerName, Layer> = {
-    track: line,
-    photos: photoLayer,
-    points: pointLayer,
-  };
-
-  for (const { name, altitude, latitude, longitude } of points) {
-    if (latitude === undefined || longitude === undefined) continue;
-
-    L.circleMarker([latitude, longitude], {
-      className: 'route-point',
-      radius: 6,
-    })
-      .bindTooltip(altitude === undefined ? name : `${name}, ${altitude} m`)
-      .addTo(pointLayer);
-    bounds.extend([latitude, longitude]);
+    return NONE;
   }
 
-  const pins = new Map<number, ReturnType<typeof L.marker>>();
+  map.addControl(
+    new maplibregl.NavigationControl({ visualizePitch: true }),
+    'top-left',
+  );
+
+  // A point's name and altitude under the mouse
+  const tooltip = new maplibregl.Popup({
+    closeButton: false,
+    closeOnClick: false,
+    offset: 10,
+    className: 'route-tooltip',
+  });
+
+  map.on('mouseenter', 'points', (event: MapLayerMouseEvent) => {
+    const [feature] = event.features ?? [];
+    // A feature of the points' source: a Point, with its label
+    const point = feature?.geometry as
+      { type: 'Point'; coordinates: [number, number] } | undefined;
+
+    if (!feature || point?.type !== 'Point') return;
+
+    tooltip
+      .setLngLat(point.coordinates)
+      .setText(String(feature.properties['label']))
+      .addTo(map);
+  });
+  map.on('mouseleave', 'points', () => tooltip.remove());
 
   // A photo's round pin, smaller on a phone, ringed while it's the one shown
   const size = window.matchMedia('(min-width: 640px)').matches ? 44 : 30;
-  const photoIcon = (
-    img: HTMLImageElement | null | undefined,
-    shown: boolean,
-  ) =>
-    L.divIcon({
-      className: shown ? 'route-photo is-shown' : 'route-photo',
-      html: img ?? '',
-      iconSize: [size, size],
-    });
+  const pins = new Map<number, { element: HTMLElement; marker: Marker }>();
 
-  photos.forEach(({ photo, caption, position }, index) => {
-    if (!position) return;
-
+  for (const { photo, caption, position, index } of placed) {
+    const element = button('route-photo');
     const img = document.createElement('img');
 
+    element.title = caption;
+    element.setAttribute('aria-label', caption);
+    element.style.width = element.style.height = `${size}px`;
     img.src = photo.imageUrlFor(480, 'webp') ?? '';
     img.alt = '';
-
-    const pin = L.marker(position, {
-      icon: photoIcon(img, false),
-      title: caption,
-      alt: caption,
-      riseOnHover: true,
-    })
-      .on('click', () => on.photo?.(index))
-      .addTo(photoLayer);
-
-    pins.set(index, pin);
-    bounds.extend(position);
-  });
-
-  if (labels && on.enlarge && !inLightbox)
-    enlargeButton(L, map, labels, on.enlarge);
-
-  // A switch for each of what's on the map, when there's more than the track
-  const pointCount = pointLayer.getLayers().length;
-
-  if (labels && (pointCount || pins.size)) {
-    const overlays: Record<string, Layer> = { [labels.track]: line };
-
-    if (pins.size) overlays[labels.photos] = photoLayer;
-    if (pointCount) overlays[labels.points] = pointLayer;
-
-    L.control.layers(undefined, overlays, { collapsed: false }).addTo(map);
+    element.append(img);
+    element.addEventListener('click', (event) => {
+      event.stopPropagation();
+      on.photo?.(index);
+    });
+    pins.set(index, {
+      element,
+      marker: new maplibregl.Marker({ element }).setLngLat(position),
+    });
   }
 
-  // While it shows what it's told, the map doesn't tell it back
-  let applying = false;
-  let ringed: number | undefined;
+  let current = state;
 
-  const ring = (index: number | undefined) => {
-    if (index === ringed) return;
+  // On its own, top right where a map's full screen button is: enlarge
+  if (labels && on.enlarge && !inLightbox) {
+    map.addControl(
+      control((box) => {
+        const enlarge = button('route-enlarge', EXPAND);
 
-    const before = ringed === undefined ? undefined : pins.get(ringed);
-    const after = index === undefined ? undefined : pins.get(index);
-
-    before?.setIcon(
-      photoIcon(before.getElement()?.querySelector('img'), false),
+        enlarge.title = labels.enlarge;
+        enlarge.setAttribute('aria-label', labels.enlarge);
+        enlarge.addEventListener('click', () => on.enlarge?.());
+        box.append(enlarge);
+      }),
+      'top-right',
     );
-    before?.setZIndexOffset(0);
-    after?.setIcon(photoIcon(after.getElement()?.querySelector('img'), true));
-    after?.setZIndexOffset(1000);
-    ringed = index;
+  }
+
+  // Under the zoom and the compass: 3D, or flat again
+  let threeD: HTMLButtonElement | undefined;
+
+  if (labels) {
+    map.addControl(
+      control((box) => {
+        threeD = button('route-3d');
+        threeD.addEventListener('click', () => {
+          map.easeTo(
+            { pitch: map.getPitch() > 0 ? 0 : PITCH, bearing: 0 },
+            BY_HAND,
+          );
+        });
+        box.append(threeD);
+      }),
+      'top-left',
+    );
+  }
+
+  // A switch for each of what's on the map, when there's more than the track
+  const switches = new Map<LayerName, HTMLInputElement>();
+  const names = LAYER_NAMES.filter(
+    (name) =>
+      name === 'track' || (name === 'points' ? located.length : pins.size) > 0,
+  );
+
+  if (labels && names.length > 1) {
+    map.addControl(
+      control((box) => {
+        for (const name of names) {
+          const label = document.createElement('label');
+          const input = document.createElement('input');
+
+          input.type = 'checkbox';
+          input.checked = !hidden.includes(name);
+          input.addEventListener('change', () => {
+            const now = names.filter((n) => !switches.get(n)?.checked);
+
+            apply({ ...current, hidden: now });
+            on.switched?.(now);
+          });
+          label.append(input, ` ${labels[name]}`);
+          box.append(label);
+          switches.set(name, input);
+        }
+      }, 'route-layers'),
+      'top-right',
+    );
+  }
+
+  // Tilted, the map stands on swisstopo's terrain; flat, it doesn't need it
+  let terrainOn = false;
+
+  const terrain = async (wanted: boolean) => {
+    if (wanted === terrainOn) return;
+
+    terrainOn = wanted;
+
+    if (!wanted) {
+      map.setTerrain(null);
+
+      return;
+    }
+
+    // Without swisstopo's terrain (offline, or it's down) it stays flat
+    const source = await waitForPromise(
+      terrainSource(maplibregl).catch(() => undefined),
+    );
+
+    if (!source) {
+      terrainOn = false;
+
+      return;
+    }
+    if (!terrainOn) return;
+    if (!map.getSource('terrain')) map.addSource('terrain', source as never);
+
+    map.setTerrain({ source: 'terrain', exaggeration: 1 });
   };
 
-  const sameView = (center: [number, number], zoom: number) => {
-    // A map without a view yet has no center to ask for
-    if (!(map as unknown as { _loaded?: boolean })._loaded) return false;
+  const showAngle = () => {
+    const tilted = map.getPitch() > 0;
 
+    if (threeD && labels) {
+      threeD.textContent = tilted ? '2D' : '3D';
+      threeD.title = tilted ? labels.flat : labels.threeD;
+      threeD.setAttribute('aria-label', threeD.title);
+      threeD.setAttribute('aria-pressed', String(tilted));
+    }
+
+    if (map.loaded() || map.isStyleLoaded()) void terrain(tilted);
+  };
+
+  const sameView = (next: MapState) => {
     const here = map.getCenter();
-    const close = (a: number, b: number) => Math.abs(a - b) < 2e-5;
+    const close = (a: number, b: number, by: number) => Math.abs(a - b) < by;
 
     return (
-      zoom === map.getZoom() &&
-      close(here.lat, center[0]) &&
-      close(here.lng, center[1])
+      close(here.lat, next.center![0], 2e-5) &&
+      close(here.lng, next.center![1], 2e-5) &&
+      close(map.getZoom(), next.zoom!, 0.01) &&
+      close(map.getPitch(), next.pitch ?? 0, 0.5) &&
+      close(map.getBearing(), next.bearing ?? 0, 0.5)
     );
   };
 
-  const apply = ({ center, zoom, shown, hidden }: MapState) => {
-    applying = true;
-
-    try {
-      if (center && zoom !== undefined) {
-        if (!sameView(center, zoom))
-          map.setView(center, zoom, { animate: false });
-      } else {
-        map.fitBounds(bounds, { padding: [24, 24], animate: false });
+  // What's on it: the layers' visibility once the style is there, the
+  // photos' markers, the switches, the ring
+  const show = ({ hidden: off, shown }: MapState) => {
+    if (map.isStyleLoaded()) {
+      for (const name of ['track', 'points'] as const) {
+        map.setLayoutProperty(name, 'visibility', visibility(off, name));
       }
-
-      for (const name of LAYER_NAMES) {
-        if (hidden.includes(name)) map.removeLayer(layers[name]);
-        else if (!map.hasLayer(layers[name])) layers[name].addTo(map);
-      }
-
-      ring(shown);
-    } finally {
-      applying = false;
     }
+
+    for (const [index, { element, marker }] of pins) {
+      if (off.includes('photos')) marker.remove();
+      else marker.addTo(map);
+
+      element.classList.toggle('is-shown', index === shown);
+      element.style.zIndex = index === shown ? '1' : '';
+    }
+
+    for (const [name, input] of switches) input.checked = !off.includes(name);
   };
 
-  apply(state ?? { hidden: [] });
+  function apply(next: MapState) {
+    current = next;
 
-  const moved = () => {
-    if (applying) return;
+    if (next.center && next.zoom !== undefined) {
+      if (!sameView(next)) {
+        map.jumpTo({
+          center: lngLat(next.center),
+          zoom: next.zoom,
+          pitch: next.pitch ?? 0,
+          bearing: next.bearing ?? 0,
+        });
+      }
+    } else {
+      map.jumpTo({ pitch: next.pitch ?? 0, bearing: next.bearing ?? 0 });
+      map.fitBounds(bounds, { padding: PADDING, animate: false });
+    }
+
+    show(next);
+    showAngle();
+  }
+
+  show(current);
+  showAngle();
+  map.once('load', () => {
+    show(current);
+    showAngle();
+  });
+  map.on('pitchend', showAngle);
+
+  // Moved by hand (a drag, the wheel, the keys, the zoom or 3D buttons),
+  // not resized or told what to show by the other map or the address
+  map.on('moveend', (event) => {
+    const { originalEvent, byHand } = event as {
+      originalEvent?: Event;
+      byHand?: boolean;
+    };
+
+    if (!originalEvent && !byHand) return;
 
     const { lat, lng } = map.getCenter();
 
-    on.moved?.([lat, lng], map.getZoom());
-  };
-
-  const switched = (event: { layer: Layer }) => {
-    if (applying || !Object.values(layers).includes(event.layer)) return;
-
-    on.switched?.(LAYER_NAMES.filter((name) => !map.hasLayer(layers[name])));
-  };
-
-  map.on('moveend', moved);
-  map.on('layeradd layerremove', switched);
-
-  return {
-    apply,
-    remove: () => {
-      // Taking the map away takes its layers away: not a switch
-      map.off('moveend', moved);
-      map.off('layeradd layerremove', switched);
-      map.remove();
-    },
-  };
-}
-
-/** A button under the zoom that opens the map in its lightbox */
-function enlargeButton(
-  L: typeof import('leaflet'),
-  map: import('leaflet').Map,
-  labels: LayerLabels,
-  enlarge: () => void,
-) {
-  const Control = L.Control.extend({
-    onAdd: () => {
-      const bar = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-      const button = L.DomUtil.create('a', 'route-enlarge', bar);
-
-      button.href = '#';
-      button.setAttribute('role', 'button');
-      button.title = labels.enlarge;
-      button.setAttribute('aria-label', labels.enlarge);
-      button.innerHTML = EXPAND;
-      L.DomEvent.disableClickPropagation(button);
-      L.DomEvent.on(button, 'click', (event) => {
-        L.DomEvent.preventDefault(event);
-        enlarge();
-      });
-
-      return bar;
-    },
+    on.moved?.([lat, lng], +map.getZoom().toFixed(2), {
+      pitch: Math.round(map.getPitch()),
+      bearing: Math.round(map.getBearing()),
+    });
   });
 
-  new Control({ position: 'topleft' }).addTo(map);
+  return { apply, remove: () => map.remove() };
 }

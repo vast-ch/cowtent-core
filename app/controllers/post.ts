@@ -4,14 +4,25 @@ import { tracked } from '@glimmer/tracking';
 /**
  * What a post shows of its map and photos, in its address
  * (app/services/post-view.ts): `lat`, `lng` and `zoom`, `photo=7` (from 1),
- * `view=photo|map` for the open lightbox, `hide=points,photos,track`.
+ * `view=photo|map` for the open lightbox, `pitch` and `bearing` tilted (3D), `hide=points,photos,track`.
  */
 export default class PostController extends Controller {
-  queryParams = ['lat', 'lng', 'zoom', 'photo', 'view', 'hide'];
+  queryParams = [
+    'lat',
+    'lng',
+    'zoom',
+    'pitch',
+    'bearing',
+    'photo',
+    'view',
+    'hide',
+  ];
 
   @tracked lat: string | null = null;
   @tracked lng: string | null = null;
   @tracked zoom: string | null = null;
+  @tracked pitch: string | null = null;
+  @tracked bearing: string | null = null;
   @tracked photo: string | null = null;
   @tracked view: string | null = null;
   @tracked hide: string | null = null;

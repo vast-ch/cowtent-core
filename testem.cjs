@@ -15,7 +15,9 @@ if (typeof module !== 'undefined') {
           process.env.CI ? '--no-sandbox' : null,
           '--headless',
           '--disable-dev-shm-usage',
-          '--disable-software-rasterizer',
+          // The maps draw with WebGL, in software here
+          '--use-angle=swiftshader',
+          '--enable-unsafe-swiftshader',
           '--mute-audio',
           '--remote-debugging-port=0',
           '--window-size=1440,900',

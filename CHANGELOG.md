@@ -1,5 +1,30 @@
 # Changelog
 
+## v0.10.0 - 2026-11-25
+
+- **3D maps**: the 3D button under the zoom tilts the map and stands it
+  on swisstopo's terrain (its open quantized mesh at 3d.geo.admin.ch,
+  through maplibre-gl-3dtiles-terrain); 2D lays it flat and north up
+  again. Dragging tilts it too. The terrain only loads once a map is
+  tilted; without it the map stays flat.
+- **MapLibre instead of Leaflet** for every map: the post's, its
+  lightbox's and a GPX in the text. The track and the points are layers
+  of the map, a point's name and altitude a tooltip; the photos stay
+  round photos on it.
+- **The address keeps the angle**: `pitch` and `bearing` next to `lat`,
+  `lng` and `zoom`, now in MapLibre's zoom levels (one less than
+  Leaflet's). Only a move by hand changes it, so a post's address stays
+  clean until then.
+- **The map loads as it's about to be seen**: MapLibre is bigger than
+  Leaflet (about 460 KB against 44 KB, gzipped), so a post shows and
+  scrolls first.
+- **On the page, the wheel and one finger scroll past the map**; Ctrl
+  and the wheel, or two fingers, move it. In the lightbox, they move it.
+- **The enlarge button stands on its own**, top right, above the
+  switches.
+- Without WebGL, the link to the route on map.geo.admin.ch stays.
+- The tests draw the maps with WebGL in software (testem.cjs).
+
 ## v0.9.0 - 2026-11-25
 
 - **The cover is in the gallery**: a post's cover is its gallery's first

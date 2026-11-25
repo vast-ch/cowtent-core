@@ -102,6 +102,9 @@ post:
       photos: Fotos
       points: Punkte
     enlarge: Karte vergrössern
+    # The button in the map's lightbox between the flat map and 3D
+    three-d: In 3D zeigen
+    flat: Flach zeigen
     close: Schliessen
 
   # Die Fotos am Ende (der Ordner gallery des Beitrags) und die Vollbildansicht

@@ -6,7 +6,7 @@ import type { LayerName, MapState } from '../content/route-map.ts';
 const LAYERS: LayerName[] = ['track', 'photos', 'points'];
 
 /** How close the map comes to a photo shown on it */
-const PHOTO_ZOOM = 16;
+const PHOTO_ZOOM = 15;
 
 // About a metre, and the map's half zoom levels
 const round = (value: number) => Math.round(value * 1e5) / 1e5;
@@ -19,7 +19,10 @@ const at = ([lat, lng]: [number, number], zoom: number) => ({
 });
 
 type Params = Partial<
-  Record<'lat' | 'lng' | 'zoom' | 'photo' | 'view' | 'hide', string | null>
+  Record<
+    'lat' | 'lng' | 'zoom' | 'pitch' | 'bearing' | 'photo' | 'view' | 'hide',
+    string | null
+  >
 >;
 
 /**
@@ -66,7 +69,16 @@ export default class PostViewService extends Service {
         ? { center: [lat!, lon!] as [number, number], zoom: zoom! }
         : undefined;
 
-    return { ...view, shown: this.photo, hidden };
+    const angle = (value: string | null | undefined) =>
+      value && Number.isFinite(Number(value)) ? Number(value) : undefined;
+
+    return {
+      ...view,
+      shown: this.photo,
+      hidden,
+      pitch: angle(this.#params.pitch),
+      bearing: angle(this.#params.bearing),
+    };
   }
 
   #replace(params: Params) {
@@ -106,14 +118,23 @@ export default class PostViewService extends Service {
   };
 
   /** Where a map was moved to */
-  moved = (center: [number, number], zoom: number) => {
-    const params = at(center, zoom);
+  moved = (
+    center: [number, number],
+    zoom: number,
+    angle: { pitch: number; bearing: number },
+  ) => {
+    const params: Params = {
+      ...at(center, zoom),
+      // Flat and north up, as without them
+      pitch: angle.pitch ? String(angle.pitch) : null,
+      bearing: angle.bearing ? String(angle.bearing) : null,
+    };
     const now = this.#params;
 
     if (
-      params.lat !== now.lat ||
-      params.lng !== now.lng ||
-      params.zoom !== now.zoom
+      (Object.keys(params) as (keyof Params)[]).some(
+        (key) => params[key] !== now[key],
+      )
     ) {
       this.#replace(params);
     }

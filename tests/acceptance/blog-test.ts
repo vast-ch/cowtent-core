@@ -6,6 +6,7 @@ import {
   triggerEvent,
   triggerKeyEvent,
   visit,
+  waitUntil,
 } from '@ember/test-helpers';
 
 import { setupApplicationTest } from '../helpers/index.ts';
@@ -490,22 +491,24 @@ module('Acceptance | blog', function (hooks) {
 
     assert
       .dom('[data-test-route] .route-map')
-      .hasClass('leaflet-container', 'the map is drawn');
+      .hasClass('maplibregl-map', 'the map is drawn');
     assert
       .dom('[data-test-route] + [data-test-gallery]')
       .exists('right above the gallery');
-    assert
-      .dom('[data-test-route] .route-point')
-      .exists({ count: 1 }, 'the point with a latitude and longitude');
     assert
       .dom('[data-test-route] .route-photo')
       .exists({ count: 2 }, 'the cover and the photo with GPS')
       .hasAttribute('title', 'Hands on the rock', 'the cover first');
     assert
-      .dom('[data-test-route] .leaflet-control-layers')
+      .dom('[data-test-route] .route-layers')
       .includesText('Route')
       .includesText('Photos')
-      .includesText('Points');
+      .includesText('Points', 'a switch for the point with coordinates');
+    assert
+      .dom('[data-test-route] .route-3d')
+      .hasText('3D')
+      .hasAttribute('aria-pressed', 'false');
+    assert.false(currentURL().includes('lat='), 'a clean address until moved');
     assert
       .dom('[data-test-route] figcaption')
       .doesNotExist('its links are in the facts');
@@ -535,7 +538,7 @@ module('Acceptance | blog', function (hooks) {
       .dom('[data-test-route] figure .route-photo.is-shown')
       .exists("and on the page's map");
     assert.true(
-      ['view=map', 'photo=1', 'lat=', 'lng=', 'zoom=16'].every((part) =>
+      ['view=map', 'photo=1', 'lat=', 'lng=', 'zoom=15'].every((part) =>
         currentURL().includes(part),
       ),
       'at the photo, in the address',
@@ -562,35 +565,54 @@ module('Acceptance | blog', function (hooks) {
 
   test("the address keeps the post's map, photo and switches", async function (assert) {
     await visit(
-      `${SCRAMBLE}?lat=46.5&lng=8.0&zoom=15&photo=1&view=map&hide=points`,
+      `${SCRAMBLE}?lat=46.5&lng=8.0&zoom=14&photo=1&view=map&hide=points`,
     );
+
+    const points = (map: string) =>
+      [
+        ...document.querySelectorAll<HTMLInputElement>(
+          `${map} .route-layers input`,
+        ),
+      ].find((input) => input.parentElement?.textContent?.includes('Points'))!;
 
     assert.dom('[data-test-route-lightbox]').exists('the lightbox it says');
     assert
       .dom('.route-map-lightbox .route-photo.is-shown')
       .exists('the photo it says');
-    assert
-      .dom('[data-test-route] .route-point')
-      .doesNotExist('without the points it switched off');
+    assert.false(
+      points('[data-test-route] figure').checked,
+      'the points it switched off',
+    );
 
     await click('[data-test-lightbox-close]');
     assert.false(currentURL().includes('view='), 'closed');
-    assert.true(currentURL().includes('zoom=15'), 'the map where it was');
+    assert.true(currentURL().includes('zoom=14'), 'the map where it was');
 
     // A switch on one map is a switch on the other
-    const points = [
-      ...document.querySelectorAll<HTMLInputElement>(
-        '[data-test-route] figure .leaflet-control-layers input',
-      ),
-    ].find((input) => input.parentElement?.textContent?.includes('Points'));
-
-    await click(points!);
-    assert.dom('[data-test-route] figure .route-point').exists();
+    await click(points('[data-test-route] figure'));
     assert.false(currentURL().includes('hide='), 'all on again');
 
     await click('[data-test-route] figure .route-enlarge');
     assert.dom('[data-test-route-lightbox]').exists('the button opens it');
-    assert.dom('.route-map-lightbox .route-point').exists('the same');
+    assert.true(points('.route-map-lightbox').checked, 'the same');
+  });
+
+  test('the 3D button tilts the map, the 2D one lays it flat again', async function (assert) {
+    await visit(`${SCRAMBLE}?pitch=45&bearing=20&lat=46.64&lng=7.97&zoom=13`);
+
+    assert
+      .dom('[data-test-route] .route-3d')
+      .hasText('2D', 'tilted from the address')
+      .hasAttribute('aria-pressed', 'true');
+
+    await click('[data-test-route] .route-3d');
+    await waitUntil(() => !currentURL().includes('pitch='), { timeout: 5000 });
+    assert.false(currentURL().includes('bearing='), 'flat and north up');
+    assert.dom('[data-test-route] .route-3d').hasText('3D');
+
+    await click('[data-test-route] .route-3d');
+    await waitUntil(() => currentURL().includes('pitch=60'), { timeout: 5000 });
+    assert.dom('[data-test-route] .route-3d').hasText('2D', 'tilted again');
   });
 
   test('a GPX embedded in the text is a map of only its track', async function (assert) {
@@ -598,9 +620,9 @@ module('Acceptance | blog', function (hooks) {
 
     assert
       .dom('.prose figure.route .route-map')
-      .hasClass('leaflet-container')
+      .hasClass('maplibregl-map')
       .hasAttribute('aria-label', 'Up the gully');
-    assert.dom('.prose .route-point').doesNotExist();
+    assert.dom('.prose .route-layers').doesNotExist('nothing to switch');
     assert.dom('.prose .route-photo').doesNotExist();
     assert
       .dom('.prose figure.route figcaption a[download]')

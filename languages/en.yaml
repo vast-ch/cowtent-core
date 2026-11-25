@@ -100,6 +100,9 @@ post:
       photos: Photos
       points: Points
     enlarge: Enlarge the map
+    # The button in the map's lightbox between the flat map and 3D
+    three-d: Show in 3D
+    flat: Show flat
     close: Close
 
   # The photos at the end (the post's gallery folder) and the full-screen view
