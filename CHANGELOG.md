@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.8.1 - 2026-11-25
+
+- **`pnpm test:output` checks the build where `cowtent build` writes
+  it**: `dist` in the folder it runs from, so `pnpm build && pnpm
+  test:output` passes without setting `BLOG_OUT`.
+
 ## v0.8.0 - 2026-11-25
 
 - **A photo on the map**: the full-screen photo has "Show on the map"

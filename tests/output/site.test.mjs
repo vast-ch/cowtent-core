@@ -14,7 +14,8 @@ import { galleryOf } from '../../lib/gallery.mjs';
 import { readSite } from '../../lib/site.mjs';
 
 const root = resolve(process.env.BLOG_CONTENT ?? '.');
-const dist = resolve(process.env.BLOG_OUT ?? join(root, 'dist'));
+// Where `cowtent build` writes it (bin/cowtent.mjs): dist where it was run
+const dist = resolve(process.env.BLOG_OUT ?? 'dist');
 const site = readSite(root);
 
 const escape = (text) =>
