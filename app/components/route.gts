@@ -4,11 +4,9 @@ import { service } from '@ember/service';
 import Component from '@glimmer/component';
 
 import { t } from 'ember-intl';
-import Modifier from 'ember-modifier';
+import { modifier } from 'ember-modifier';
 
-import type { ArgsFor } from 'ember-modifier';
-
-import { routeMap } from '../content/route-map.ts';
+import { nearView, routeMap } from '../content/route-map.ts';
 import { Lightbox } from './lightbox.gts';
 
 import type Owner from '@ember/owner';
@@ -23,48 +21,10 @@ import type {
 import type { Point } from '../content/schemas.ts';
 import type PostViewService from '../services/post-view.ts';
 
-interface DrawMapSignature {
-  Element: HTMLElement;
-  Args: {
-    Positional: [Point[] | undefined, GalleryPhoto[] | undefined, LayerLabels];
-    Named: {
-      state: MapState;
-      on: MapEvents;
-      inLightbox?: boolean;
-    };
-  };
-}
-
-/**
- * Draws the map once, then only shows the state it's given again: moving
- * one map moves the other, not draws it anew
- */
-class DrawMap extends Modifier<DrawMapSignature> {
-  map?: Promise<RouteMap>;
-
-  constructor(owner: Owner, args: ArgsFor<DrawMapSignature>) {
-    super(owner, args);
-    registerDestructor(this, () => void this.map?.then((map) => map.remove()));
-  }
-
-  modify(
-    element: HTMLElement,
-    [points, photos, labels]: DrawMapSignature['Args']['Positional'],
-    { state, on, inLightbox }: DrawMapSignature['Args']['Named'],
-  ) {
-    if (this.map) {
-      void this.map.then((map) => map.apply(state));
-    } else {
-      this.map = routeMap(element, {
-        points,
-        photos,
-        labels,
-        inLightbox,
-        state,
-        on,
-      });
-    }
-  }
+interface Args {
+  route: PostRoute;
+  points?: Point[];
+  photos?: GalleryPhoto[];
 }
 
 /**
@@ -72,14 +32,23 @@ class DrawMap extends Modifier<DrawMapSignature> {
  * the points of the facts with a latitude and longitude, and the gallery's
  * photos where they were taken (app/content/route-map.ts). The link to
  * the route on map.geo.admin.ch is the map until it's drawn; the file to
- * download and that link are in the facts (app/components/facts.gts). The
- * same map fills its lightbox; both show, and change, what the post's
+ * download and that link are in the facts (app/components/facts.gts).
+ *
+ * It's one map: drawn once it's about to scroll into view, or at once
+ * when its lightbox opens first, and moved into the lightbox and back as
+ * it is, so nothing loads twice. It shows, and changes, what the post's
  * address says (app/services/post-view.ts).
  */
-export class Route extends Component<{
-  Args: { route: PostRoute; points?: Point[]; photos?: GalleryPhoto[] };
-}> {
+export class Route extends Component<{ Args: Args }> {
   @service declare postView: PostViewService;
+
+  map?: Promise<RouteMap>;
+  page?: HTMLElement;
+
+  constructor(owner: Owner, args: Args) {
+    super(owner, args);
+    registerDestructor(this, () => void this.map?.then((map) => map.remove()));
+  }
 
   get on(): MapEvents {
     return {
@@ -98,6 +67,52 @@ export class Route extends Component<{
     return this.postView.view === 'map';
   }
 
+  /** The map, drawn in `place` if it isn't yet */
+  draw(place: HTMLElement, labels: LayerLabels, inLightbox: boolean) {
+    this.map ??= routeMap(place, {
+      points: this.args.points,
+      photos: this.args.photos,
+      labels,
+      inLightbox,
+      eager: true,
+      state: this.postView.mapState,
+      on: this.on,
+    });
+
+    return this.map;
+  }
+
+  // Its place on the page, where it comes back to from the lightbox
+  onPage = modifier((element: HTMLElement, [labels]: [LayerLabels]) => {
+    this.page = element;
+    void nearView(element).then(() => {
+      if (element.isConnected) void this.draw(element, labels, false);
+    });
+  });
+
+  // While the lightbox is open, the map is in it
+  inLightbox = modifier((element: HTMLElement, [labels]: [LayerLabels]) => {
+    // After this render: drawing reads the address, which this mustn't
+    // follow, or every move would take the map out and back in
+    void Promise.resolve()
+      .then(() => this.draw(element, labels, true))
+      .then((map) => {
+        if (element.isConnected) map.moveTo(element, true);
+      });
+
+    return () => {
+      const page = this.page;
+
+      if (page?.isConnected)
+        void this.map?.then((map) => map.moveTo(page, false));
+    };
+  });
+
+  // What the address says, wherever the map is
+  shows = modifier((_element: HTMLElement, [state]: [MapState]) => {
+    void this.map?.then((map) => map.apply(state));
+  });
+
   <template>
     {{#let
       (hash
@@ -110,7 +125,12 @@ export class Route extends Component<{
       )
       as |labels|
     }}
-      <section class="mt-16" aria-labelledby="route-title" data-test-route>
+      <section
+        class="mt-16"
+        aria-labelledby="route-title"
+        data-test-route
+        {{this.shows this.postView.mapState}}
+      >
         <h2 id="route-title" class="section-heading">
           {{t "post.route.map"}}
         </h2>
@@ -121,13 +141,7 @@ export class Route extends Component<{
             data-track={{this.track}}
             role="region"
             aria-labelledby="route-title"
-            {{DrawMap
-              @points
-              @photos
-              labels
-              state=this.postView.mapState
-              on=this.on
-            }}
+            {{this.onPage labels}}
           >
             <a href={{@route.map}}>{{t "post.route.map"}}</a>
           </div>
@@ -147,14 +161,7 @@ export class Route extends Component<{
                 data-track={{this.track}}
                 role="region"
                 aria-label={{t "post.route.map"}}
-                {{DrawMap
-                  @points
-                  @photos
-                  labels
-                  state=this.postView.mapState
-                  on=this.on
-                  inLightbox=true
-                }}
+                {{this.inLightbox labels}}
               ></div>
             </div>
           {{/if}}

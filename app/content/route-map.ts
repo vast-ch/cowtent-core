@@ -61,8 +61,13 @@ export interface MapEvents {
 }
 
 export interface RouteMap {
-  /** Shows what another map, or the address, says it should */
+  /** Shows what the address says it should */
   apply: (state: MapState) => void;
+  /**
+   * Moves the map, as it is, into another place: the post's map into its
+   * lightbox and back, so it's one map that doesn't load anything again
+   */
+  moveTo: (place: HTMLElement, inLightbox: boolean) => void;
   remove: () => void;
 }
 
@@ -72,6 +77,8 @@ export interface Pins {
   labels?: LayerLabels;
   /** The map in its lightbox: the wheel zooms it, no button to enlarge it */
   inLightbox?: boolean;
+  /** Drawn now, not once it's about to scroll into view */
+  eager?: boolean;
   state?: MapState;
   on?: MapEvents;
 }
@@ -89,7 +96,7 @@ const POINT_RIM = '#1c1917';
 const EXPAND =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
-const NONE: RouteMap = { apply: () => {}, remove: () => {} };
+const NONE: RouteMap = { apply: () => {}, moveTo: () => {}, remove: () => {} };
 
 /** Marks the 3D button's tilt as a move by hand, like a drag's or the zoom's */
 const BY_HAND = { byHand: true };
@@ -99,7 +106,7 @@ const BY_HAND = { byHand: true };
  * and more to start, so a post shows and scrolls first. Tests draw it
  * straight away.
  */
-function nearView(element: HTMLElement) {
+export function nearView(element: HTMLElement) {
   if (isTesting() || !('IntersectionObserver' in window))
     return Promise.resolve();
 
@@ -166,6 +173,7 @@ export async function routeMap(
     photos = [],
     labels,
     inLightbox = false,
+    eager = false,
     state = { hidden: [] },
     on = {},
   }: Pins,
@@ -177,7 +185,7 @@ export async function routeMap(
 
   if (!track.length) return NONE;
 
-  await nearView(container);
+  if (!eager) await nearView(container);
 
   const [maplibregl, { default: workerUrl }] = await waitForPromise(
     Promise.all([
@@ -213,14 +221,18 @@ export async function routeMap(
 
   const { center, zoom, pitch = 0, bearing = 0, hidden } = state;
   const fallback = [...container.childNodes];
+  // The map's own element, which moves with it (moveTo)
+  const element = document.createElement('div');
 
-  container.replaceChildren();
+  element.className = 'route-map-canvas';
+  element.dataset['terrain'] = 'off';
+  container.replaceChildren(element);
 
   let map: MapLibreMap;
 
   try {
     map = new maplibregl.Map({
-      container,
+      container: element,
       style: {
         version: 8,
         sources: {
@@ -304,8 +316,6 @@ export async function routeMap(
       pitch,
       bearing,
       maxPitch: 85,
-      // On the page, the wheel and one finger scroll past it
-      cooperativeGestures: !inLightbox,
       attributionControl: { compact: true },
     });
   } catch {
@@ -347,42 +357,48 @@ export async function routeMap(
   // photo doesn't hide the place; smaller on a phone, ringed while it's
   // the one shown. Upright in 3D too, standing on the terrain.
   const size = window.matchMedia('(min-width: 640px)').matches ? 44 : 30;
-  const pins = new Map<number, { element: HTMLElement; marker: Marker }>();
+  const pins = new Map<number, { pin: HTMLElement; marker: Marker }>();
 
   for (const { photo, caption, position, index } of placed) {
-    const element = button('route-photo');
+    const pin = button('route-photo');
     const bubble = document.createElement('span');
     const img = document.createElement('img');
     const tip = document.createElement('span');
 
-    element.title = caption;
-    element.setAttribute('aria-label', caption);
-    element.style.width = `${size}px`;
+    pin.title = caption;
+    pin.setAttribute('aria-label', caption);
+    pin.style.width = `${size}px`;
     bubble.className = 'route-bubble';
     tip.className = 'route-tip';
     img.src = photo.imageUrlFor(480, 'webp') ?? '';
     img.alt = '';
     bubble.append(img, tip);
-    element.append(bubble);
-    element.addEventListener('click', (event) => {
+    pin.append(bubble);
+    pin.addEventListener('click', (event) => {
       event.stopPropagation();
       on.photo?.(index);
     });
     pins.set(index, {
-      element,
-      marker: new maplibregl.Marker({ element, anchor: 'bottom' }).setLngLat(
-        position,
-      ),
+      pin,
+      marker: new maplibregl.Marker({
+        element: pin,
+        anchor: 'bottom',
+      }).setLngLat(position),
     });
   }
 
   let current = state;
 
-  // On its own, top right where a map's full screen button is: enlarge
-  if (labels && on.enlarge && !inLightbox) {
+  // On its own, top right where a map's full screen button is: enlarge,
+  // only out of the lightbox
+  let enlargeBox: HTMLElement | undefined;
+
+  if (labels && on.enlarge) {
     map.addControl(
       control((box) => {
         const enlarge = button('route-enlarge', EXPAND);
+
+        enlargeBox = box;
 
         enlarge.title = labels.enlarge;
         enlarge.setAttribute('aria-label', labels.enlarge);
@@ -443,6 +459,10 @@ export async function routeMap(
     );
   }
 
+  // Once the style is there (its 'load'), layers and terrain can be changed,
+  // whatever tiles are still coming in
+  let ready = false;
+
   // Tilted, the map stands on swisstopo's terrain; flat, it doesn't need it
   let terrainOn = false;
 
@@ -453,9 +473,12 @@ export async function routeMap(
 
     if (!wanted) {
       map.setTerrain(null);
+      element.dataset['terrain'] = 'off';
 
       return;
     }
+
+    element.dataset['terrain'] = 'loading';
 
     // Without swisstopo's terrain (offline, or it's down) it stays flat
     const source = await waitForPromise(
@@ -464,6 +487,7 @@ export async function routeMap(
 
     if (!source) {
       terrainOn = false;
+      element.dataset['terrain'] = 'off';
 
       return;
     }
@@ -471,6 +495,7 @@ export async function routeMap(
     if (!map.getSource('terrain')) map.addSource('terrain', source as never);
 
     map.setTerrain({ source: 'terrain', exaggeration: 1 });
+    element.dataset['terrain'] = 'on';
   };
 
   const showAngle = () => {
@@ -483,7 +508,7 @@ export async function routeMap(
       threeD.setAttribute('aria-pressed', String(tilted));
     }
 
-    if (map.loaded() || map.isStyleLoaded()) void terrain(tilted);
+    if (ready) void terrain(tilted);
   };
 
   const sameView = (next: MapState) => {
@@ -502,18 +527,18 @@ export async function routeMap(
   // What's on it: the layers' visibility once the style is there, the
   // photos' markers, the switches, the ring
   const show = ({ hidden: off, shown }: MapState) => {
-    if (map.isStyleLoaded()) {
+    if (ready) {
       for (const name of ['track', 'points'] as const) {
         map.setLayoutProperty(name, 'visibility', visibility(off, name));
       }
     }
 
-    for (const [index, { element, marker }] of pins) {
+    for (const [index, { pin, marker }] of pins) {
       if (off.includes('photos')) marker.remove();
       else marker.addTo(map);
 
-      element.classList.toggle('is-shown', index === shown);
-      element.style.zIndex = index === shown ? '1' : '';
+      pin.classList.toggle('is-shown', index === shown);
+      pin.style.zIndex = index === shown ? '1' : '';
     }
 
     for (const [name, input] of switches) input.checked = !off.includes(name);
@@ -543,6 +568,7 @@ export async function routeMap(
   show(current);
   showAngle();
   map.once('load', () => {
+    ready = true;
     show(current);
     showAngle();
   });
@@ -566,5 +592,25 @@ export async function routeMap(
     });
   });
 
-  return { apply, remove: () => map.remove() };
+  // On the page, the wheel and one finger scroll past it; in its lightbox
+  // they move it, and there's no button to enlarge it
+  const place = (lightbox: boolean) => {
+    if (lightbox) map.cooperativeGestures.disable();
+    else map.cooperativeGestures.enable();
+
+    if (enlargeBox) enlargeBox.style.display = lightbox ? 'none' : '';
+  };
+
+  place(inLightbox);
+
+  return {
+    apply,
+    moveTo: (next, lightbox) => {
+      if (element.parentElement !== next) next.replaceChildren(element);
+
+      place(lightbox);
+      map.resize();
+    },
+    remove: () => map.remove(),
+  };
 }

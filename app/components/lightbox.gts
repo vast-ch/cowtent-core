@@ -1,8 +1,10 @@
 import { on } from '@ember/modifier';
+import Component from '@glimmer/component';
+import { tracked } from '@glimmer/tracking';
+
+import { modifier } from 'ember-modifier';
 
 import { Overlay } from 'frontile/overlays';
-
-import type { TOC } from '@ember/component/template-only';
 
 /** A button on a lightbox's dark: round, lighter under the mouse */
 export const LIGHTBOX_BUTTON =
@@ -19,8 +21,12 @@ const closeBeside = (close: () => void) => (event: MouseEvent) => {
  * the close button, the content filling the rest. A click beside the
  * content, on anything marked `data-beside`, closes it too. The gallery's
  * photos and the route's map both open in one.
+ *
+ * Opened by the address (a link to a photo or the map), it opens only once
+ * the app has attached to the prerendered page: opened while attaching,
+ * the Overlay's focus trap finds nothing to focus, and it stays shut.
  */
-export const Lightbox: TOC<{
+export class Lightbox extends Component<{
   Args: {
     isOpen: boolean;
     onClose: () => void;
@@ -29,56 +35,69 @@ export const Lightbox: TOC<{
   };
   Blocks: { default: []; bar: [] };
   Element: HTMLDivElement;
-}> = <template>
-  <Overlay
-    @isOpen={{@isOpen}}
-    @onClose={{@onClose}}
-    @backdrop="none"
-    @closeOnOutsideClick={{false}}
-    @closeOnOverlayElementClick={{false}}
-    @blockScroll={{true}}
-  >
-    {{! A mouse shortcut for Esc and the close button }}
-    {{! template-lint-disable no-invalid-interactive }}
-    <div
-      class="flex h-dvh w-screen flex-col bg-slate-950/95 text-white"
-      role="dialog"
-      aria-modal="true"
-      aria-label={{@label}}
-      data-beside
-      data-test-lightbox
-      {{on "click" (closeBeside @onClose)}}
-      ...attributes
+}> {
+  @tracked attached = false;
+
+  attach = modifier(() => {
+    requestAnimationFrame(() => (this.attached = true));
+  });
+
+  get isOpen() {
+    return this.attached && this.args.isOpen;
+  }
+
+  <template>
+    <span hidden {{this.attach}}></span>
+    <Overlay
+      @isOpen={{this.isOpen}}
+      @onClose={{@onClose}}
+      @backdrop="none"
+      @closeOnOutsideClick={{false}}
+      @closeOnOverlayElementClick={{false}}
+      @blockScroll={{true}}
     >
+      {{! A mouse shortcut for Esc and the close button }}
+      {{! template-lint-disable no-invalid-interactive }}
       <div
-        class="flex items-center gap-2 px-4 py-3 font-mono text-sm text-slate-300"
+        class="flex h-dvh w-screen flex-col bg-slate-950/95 text-white"
+        role="dialog"
+        aria-modal="true"
+        aria-label={{@label}}
         data-beside
+        data-test-lightbox
+        {{on "click" (closeBeside @onClose)}}
+        ...attributes
       >
-        <span
-          class="flex-1"
+        <div
+          class="flex items-center gap-2 px-4 py-3 font-mono text-sm text-slate-300"
           data-beside
-          data-test-lightbox-label
-        >{{@label}}</span>
-        {{yield to="bar"}}
-        <button
-          type="button"
-          class="{{LIGHTBOX_BUTTON}} p-2"
-          aria-label={{@closeLabel}}
-          data-test-lightbox-close
-          {{on "click" @onClose}}
         >
-          <svg viewBox="0 0 24 24" class="size-6" aria-hidden="true">
-            <path
-              d="M6 6l12 12M18 6L6 18"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-          </svg>
-        </button>
+          <span
+            class="flex-1"
+            data-beside
+            data-test-lightbox-label
+          >{{@label}}</span>
+          {{yield to="bar"}}
+          <button
+            type="button"
+            class="{{LIGHTBOX_BUTTON}} p-2"
+            aria-label={{@closeLabel}}
+            data-test-lightbox-close
+            {{on "click" @onClose}}
+          >
+            <svg viewBox="0 0 24 24" class="size-6" aria-hidden="true">
+              <path
+                d="M6 6l12 12M18 6L6 18"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+        </div>
+        {{yield}}
       </div>
-      {{yield}}
-    </div>
-    {{! template-lint-enable no-invalid-interactive }}
-  </Overlay>
-</template>;
+      {{! template-lint-enable no-invalid-interactive }}
+    </Overlay>
+  </template>
+}

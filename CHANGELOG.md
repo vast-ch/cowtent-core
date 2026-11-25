@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.11.1 - 2026-11-25
+
+- **A link to a photo or the map opens it again**: opened straight from
+  the address, a lightbox stayed shut on the built site (its focus trap
+  ran while the app attached to the prerendered page). It now opens just
+  after.
+- **One map, moved into its lightbox and back**: enlarging the map, or
+  going from the map to a photo and back, no longer draws a second map
+  and loads its tiles and terrain again. Tilted, the map shows the
+  terrain from the first click.
+
 ## v0.11.0 - 2026-11-25
 
 - **A photo on the map is a bubble on a pin**: the pin's tip is where it

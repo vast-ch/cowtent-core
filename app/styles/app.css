@@ -187,6 +187,11 @@ figure.route .route-map {
   @apply isolate min-h-0 w-full flex-1 overflow-hidden rounded-xl bg-stone-100 font-sans;
 }
 
+/* The map itself, which moves between the page and the lightbox */
+.route-map .route-map-canvas {
+  @apply size-full;
+}
+
 /* The map's own buttons: enlarge (top right), 3D or flat (under the zoom) */
 .route-map .route-enlarge {
   @apply flex! items-center justify-center text-stone-800;

@@ -490,8 +490,8 @@ module('Acceptance | blog', function (hooks) {
     await visit(SCRAMBLE);
 
     assert
-      .dom('[data-test-route] .route-map')
-      .hasClass('maplibregl-map', 'the map is drawn');
+      .dom('[data-test-route] figure .route-map .maplibregl-map')
+      .exists('the map is drawn');
     assert
       .dom('[data-test-route] + [data-test-gallery]')
       .exists('right above the gallery');
@@ -553,8 +553,9 @@ module('Acceptance | blog', function (hooks) {
       .dom('.route-map-lightbox .route-photo.is-shown')
       .hasAttribute('title', 'Hands on the rock', 'the photo stands out on it');
     assert
-      .dom('[data-test-route] figure .route-photo.is-shown')
-      .exists("and on the page's map");
+      .dom('.route-map-lightbox .maplibregl-map')
+      .exists({ count: 1 }, "one map: the page's, moved into the lightbox");
+    assert.dom('[data-test-route] figure .maplibregl-map').doesNotExist();
     assert.true(
       ['view=map', 'photo=1', 'lat=', 'lng=', 'zoom=15'].every((part) =>
         currentURL().includes(part),
@@ -598,7 +599,7 @@ module('Acceptance | blog', function (hooks) {
       .dom('.route-map-lightbox .route-photo.is-shown')
       .exists('the photo it says');
     assert.false(
-      points('[data-test-route] figure').checked,
+      points('.route-map-lightbox').checked,
       'the points it switched off',
     );
 
@@ -627,10 +628,16 @@ module('Acceptance | blog', function (hooks) {
     await waitUntil(() => !currentURL().includes('pitch='), { timeout: 5000 });
     assert.false(currentURL().includes('bearing='), 'flat and north up');
     assert.dom('[data-test-route] .route-3d').hasText('3D');
+    assert
+      .dom('[data-test-route] .route-map-canvas')
+      .hasAttribute('data-terrain', 'off', 'flat, without the terrain');
 
     await click('[data-test-route] .route-3d');
     await waitUntil(() => currentURL().includes('pitch=60'), { timeout: 5000 });
     assert.dom('[data-test-route] .route-3d').hasText('2D', 'tilted again');
+    assert
+      .dom('[data-test-route] .route-map-canvas')
+      .hasAttribute('data-terrain', /^(loading|on)$/, 'and on the terrain');
   });
 
   test('a GPX embedded in the text is a map of only its track', async function (assert) {
@@ -638,8 +645,8 @@ module('Acceptance | blog', function (hooks) {
 
     assert
       .dom('.prose figure.route .route-map')
-      .hasClass('maplibregl-map')
       .hasAttribute('aria-label', 'Up the gully');
+    assert.dom('.prose figure.route .route-map .maplibregl-map').exists();
     assert.dom('.prose .route-layers').doesNotExist('nothing to switch');
     assert.dom('.prose .route-photo').doesNotExist();
     assert
