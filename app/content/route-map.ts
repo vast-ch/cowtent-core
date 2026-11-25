@@ -343,27 +343,36 @@ export async function routeMap(
   });
   map.on('mouseleave', 'points', () => tooltip.remove());
 
-  // A photo's round pin, smaller on a phone, ringed while it's the one shown
+  // A photo in a bubble on a pin, the pin's tip where it was taken, so the
+  // photo doesn't hide the place; smaller on a phone, ringed while it's
+  // the one shown. Upright in 3D too, standing on the terrain.
   const size = window.matchMedia('(min-width: 640px)').matches ? 44 : 30;
   const pins = new Map<number, { element: HTMLElement; marker: Marker }>();
 
   for (const { photo, caption, position, index } of placed) {
     const element = button('route-photo');
+    const bubble = document.createElement('span');
     const img = document.createElement('img');
+    const tip = document.createElement('span');
 
     element.title = caption;
     element.setAttribute('aria-label', caption);
-    element.style.width = element.style.height = `${size}px`;
+    element.style.width = `${size}px`;
+    bubble.className = 'route-bubble';
+    tip.className = 'route-tip';
     img.src = photo.imageUrlFor(480, 'webp') ?? '';
     img.alt = '';
-    element.append(img);
+    bubble.append(img, tip);
+    element.append(bubble);
     element.addEventListener('click', (event) => {
       event.stopPropagation();
       on.photo?.(index);
     });
     pins.set(index, {
       element,
-      marker: new maplibregl.Marker({ element }).setLngLat(position),
+      marker: new maplibregl.Marker({ element, anchor: 'bottom' }).setLngLat(
+        position,
+      ),
     });
   }
 

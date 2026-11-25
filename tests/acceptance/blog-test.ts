@@ -520,6 +520,24 @@ module('Acceptance | blog', function (hooks) {
       .hasAttribute('alt', 'Hands on the rock', "the photo's pin opens it");
   });
 
+  test("a photo on the map is a bubble on a pin, the pin's tip where it was taken", async function (assert) {
+    await visit(SCRAMBLE);
+
+    const pin = find('[data-test-route] figure .route-photo') as HTMLElement;
+
+    assert
+      .dom('.route-bubble img', pin)
+      .exists('the photo in a bubble')
+      .hasAttribute('alt', '', 'the pin says what it is, not the photo');
+    assert.dom('.route-bubble .route-tip', pin).exists('on a pin');
+    assert
+      .dom(pin)
+      .hasClass(
+        'maplibregl-marker-anchor-bottom',
+        'its bottom, the tip, where the photo was taken',
+      );
+  });
+
   test('a photo with GPS is shown on the map, one lightbox at a time', async function (assert) {
     await visit(SCRAMBLE);
 

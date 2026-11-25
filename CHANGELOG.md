@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.11.0 - 2026-11-25
+
+- **A photo on the map is a bubble on a pin**: the pin's tip is where it
+  was taken, the photo above it, so it no longer hides the place. In 3D
+  the pin stands upright on the terrain. Under the mouse the bubble
+  grows up from the tip; the photo shown from the gallery has its ring
+  and its pin in the blog's colour.
+
 ## v0.10.0 - 2026-11-25
 
 - **3D maps**: the 3D button under the zoom tilts the map and stands it

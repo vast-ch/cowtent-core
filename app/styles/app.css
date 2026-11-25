@@ -215,27 +215,46 @@ figure.route .route-map {
 }
 
 /*
- * A photo where it was taken: round, a white rim, bigger under the mouse.
+ * A photo where it was taken: in a round bubble on a pin, the pin's tip on
+ * the place (app/content/route-map.ts). Under the mouse it grows up from
+ * the tip, never over the place.
  */
 .route-map .route-photo {
+  @apply block cursor-pointer;
+
+  & .route-bubble {
+    @apply flex origin-bottom flex-col items-center drop-shadow-md transition-transform duration-200;
+  }
+
   & img {
-    @apply size-full! cursor-pointer rounded-full object-cover shadow-md ring-2 ring-white transition-transform duration-200;
+    @apply aspect-square w-full rounded-full object-cover ring-2 ring-white;
+  }
+
+  /* The pin under the bubble, its tip on the place */
+  & .route-tip {
+    @apply -mt-px h-0 w-0 border-x-[6px] border-t-[9px] border-x-transparent border-t-white;
   }
 
   /* Only with a mouse: a tap would leave it big */
   @media (hover: hover) {
-    &:hover img {
+    &:hover .route-bubble {
       @apply scale-[1.6];
     }
   }
 
-  &:focus-visible img {
+  &:focus-visible .route-bubble {
     @apply scale-[1.6];
   }
 
   /* Shown on the map from the gallery */
-  &.is-shown img {
-    @apply ring-4 ring-accent-600;
+  &.is-shown {
+    & img {
+      @apply ring-4 ring-accent-600;
+    }
+
+    & .route-tip {
+      @apply border-t-accent-600;
+    }
   }
 }
 
