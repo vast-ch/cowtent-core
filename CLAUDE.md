@@ -37,6 +37,12 @@ runs `cowtent build` (`bin/cowtent.mjs`).
 - Tag names come from the blog's site.yaml; `translations/en-us.json` has only
   the app's own (the fact filters).
 - `pnpm test` (QUnit, fixtures), `pnpm build && pnpm test:output`, `pnpm lint`.
+- Test locally, not in prod: every push runs CI here, and a blog's push
+  builds it on GitHub Pages or Netlify. Check a change in a blog with a
+  production build against this folder (in the blog,
+  `node <this folder>/bin/cowtent.mjs build`), its `dist` served locally
+  (`python3 -m http.server`) and looked at in a browser (Playwright). Push
+  only to release, everything pending at once: core, then the blogs.
 
 - The design ("Basecamp": header band, ridge, card grid, right column) is our own, written from a spec. Never copy markup or classes from Tailwind Plus, Tailwind UI or any other paid template: the whole repo is MIT.
 - Fonts: Fraunces (`font-display`, headings) and Inter (`font-sans`), self-hosted via @fontsource-variable (OFL).
