@@ -2,6 +2,12 @@ import { waitForPromise } from '@ember/test-waiters';
 import { isTesting } from '@embroider/macros';
 
 import { terrainSource } from './route-map-3d.ts';
+import {
+  distanceAlong,
+  profileChart,
+  profileOf,
+  WALKER,
+} from './route-profile.ts';
 
 import type {
   IControl,
@@ -27,14 +33,27 @@ export interface LayerLabels {
   track: string;
   photos: string;
   points: string;
+  profile: string;
   enlarge: string;
   threeD: string;
   flat: string;
+  /** The altitude profile's (app/content/route-profile.ts) */
+  play: string;
+  pause: string;
+  fromStart: string;
+  toEnd: string;
+  climbed: string;
+  toClimb: string;
 }
 
-export type LayerName = 'track' | 'photos' | 'points';
+export type LayerName = 'track' | 'photos' | 'points' | 'profile';
 
-export const LAYER_NAMES: LayerName[] = ['track', 'photos', 'points'];
+export const LAYER_NAMES: LayerName[] = [
+  'track',
+  'photos',
+  'points',
+  'profile',
+];
 
 /** What a map shows (app/services/post-view.ts), the whole route without a center */
 export interface MapState {
@@ -178,9 +197,11 @@ export async function routeMap(
     on = {},
   }: Pins,
 ): Promise<RouteMap> {
+  // [lat, lng, elevation?] (lib/route.mjs)
   const track = JSON.parse(container.dataset['track'] ?? '[]') as [
     number,
     number,
+    number?,
   ][];
 
   if (!track.length) return NONE;
@@ -202,7 +223,10 @@ export async function routeMap(
 
   maplibregl.setWorkerUrl(workerUrl);
 
-  const lngLat = ([lat, lng]: [number, number]): [number, number] => [lng, lat];
+  const lngLat = ([lat, lng]: [number, number, number?]): [number, number] => [
+    lng,
+    lat,
+  ];
   const located = points.filter(
     (point): point is Point & { latitude: number; longitude: number } =>
       point.latitude !== undefined && point.longitude !== undefined,
@@ -428,11 +452,95 @@ export async function routeMap(
     );
   }
 
+  // Along its bottom, the altitude profile, when the track has elevations;
+  // a walker on the map where it's hovered, or walked along when played
+  const profile = labels ? profileOf(track) : undefined;
+  const locale = document.documentElement.lang || undefined;
+  const walker = button('route-walker');
+  const walkerBubble = document.createElement('span');
+  const walkerTip = document.createElement('span');
+
+  walkerBubble.className = 'route-bubble';
+  walkerBubble.innerHTML = WALKER;
+  walkerTip.className = 'route-tip';
+  walkerBubble.append(walkerTip);
+  walker.append(walkerBubble);
+  walker.tabIndex = -1;
+  walker.setAttribute('aria-hidden', 'true');
+
+  // Seen even behind a ridge in 3D, where MapLibre would fade it
+  const walkerMarker = new maplibregl.Marker({
+    element: walker,
+    anchor: 'bottom',
+    opacityWhenCovered: '1',
+  });
+  // While it walks, the map follows the walker: a glide to where it is
+  // first, then centred on it all the way
+  const follow = (at: [number, number]) => {
+    const { x, y } = map.project(at);
+    const { clientWidth: width, clientHeight: height } = map.getContainer();
+    const far = Math.hypot(x - width / 2, y - height / 2) > 40;
+
+    if (map.isMoving()) return;
+    if (far) map.easeTo({ center: at, duration: 700 });
+    else map.jumpTo({ center: at });
+  };
+
+  const chart =
+    profile && labels
+      ? profileChart(
+          profile,
+          placed.flatMap(({ photo, caption, position, index }) => {
+            const distance = distanceAlong(profile, position);
+
+            return distance === undefined
+              ? []
+              : [
+                  {
+                    index,
+                    caption,
+                    distance,
+                    src: photo.imageUrlFor(160, 'webp') ?? '',
+                  },
+                ];
+          }),
+          labels,
+          {
+            at: (point, walking) => {
+              if (!point) {
+                walkerMarker.remove();
+
+                return;
+              }
+
+              walkerMarker.setLngLat(point.lngLat).addTo(map);
+
+              if (walking) follow(point.lngLat);
+            },
+            photo: (index) => on.photo?.(index),
+          },
+          locale,
+        )
+      : undefined;
+
+  if (chart) {
+    element.append(chart.element);
+    element.classList.add('has-profile');
+  }
+
+  // A drag stops the walk
+  map.on('movestart', (event) => {
+    if ((event as { originalEvent?: Event }).originalEvent) chart?.pause();
+  });
+
   // A switch for each of what's on the map, when there's more than the track
   const switches = new Map<LayerName, HTMLInputElement>();
-  const names = LAYER_NAMES.filter(
-    (name) =>
-      name === 'track' || (name === 'points' ? located.length : pins.size) > 0,
+  const names = LAYER_NAMES.filter((name) =>
+    name === 'track'
+      ? true
+      : name === 'profile'
+        ? chart !== undefined
+        : (name === 'points' ? located.length : pins.size) > 0,
   );
 
   if (labels && names.length > 1) {
@@ -541,6 +649,12 @@ export async function routeMap(
       pin.style.zIndex = index === shown ? '1' : '';
     }
 
+    chart?.show(!off.includes('profile'), !off.includes('photos'), shown);
+    element.classList.toggle(
+      'has-profile',
+      chart !== undefined && !off.includes('profile'),
+    );
+
     for (const [name, input] of switches) input.checked = !off.includes(name);
   };
 
@@ -611,6 +725,9 @@ export async function routeMap(
       place(lightbox);
       map.resize();
     },
-    remove: () => map.remove(),
+    remove: () => {
+      chart?.remove();
+      map.remove();
+    },
   };
 }

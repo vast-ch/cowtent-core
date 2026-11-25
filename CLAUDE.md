@@ -24,7 +24,8 @@ runs `cowtent build` (`bin/cowtent.mjs`).
   (`app/services/post-view.ts`); the maps only show state and report
   what's done to them by hand (`app/content/route-map.ts`, MapLibre, loaded
   when the map is about to be seen). Tilted is 3D, on swisstopo's terrain
-  (`app/content/route-map-3d.ts`). Write maps the MapLibre way: layers of
+  (`app/content/route-map-3d.ts`). The altitude profile along the map's
+  bottom, its walker and the walk are `app/content/route-profile.ts`. Write maps the MapLibre way: layers of
   the style for the track and points, markers only for HTML like photos.
 - Tag names come from the blog's site.yaml; `translations/en-us.json` has only
   the app's own (the fact filters).

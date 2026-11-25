@@ -67,6 +67,21 @@ test('the track for the map has at most 500 points, the last one kept', () => {
   assert.deepEqual(track.at(-1), [46.12, 7.12346], 'not the waypoint');
 });
 
+test('the track keeps the elevation of the points that have one', () => {
+  assert.deepEqual(
+    trackOf(`<gpx><trk><trkseg>
+      <trkpt lat="46.1" lon="7.1"><ele>652.4</ele><time>2024</time></trkpt>
+      <trkpt lat="46.2" lon="7.2"/>
+      <trkpt lat="46.3" lon="7.3"><ele> 1790.6 </ele></trkpt>
+    </trkseg></trk></gpx>`),
+    [
+      [46.1, 7.1, 652],
+      [46.2, 7.2],
+      [46.3, 7.3, 1791],
+    ],
+  );
+});
+
 test('without words in the brackets the map is "The route"', async () => {
   assert.match(
     await renderPage('![](./route.gpx)', options),

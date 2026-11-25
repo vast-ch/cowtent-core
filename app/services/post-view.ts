@@ -3,7 +3,7 @@ import Service, { service } from '@ember/service';
 import type RouterService from '@ember/routing/router-service';
 import type { LayerName, MapState } from '../content/route-map.ts';
 
-const LAYERS: LayerName[] = ['track', 'photos', 'points'];
+const LAYERS: LayerName[] = ['track', 'photos', 'points', 'profile'];
 
 /** How close the map comes to a photo shown on it */
 const PHOTO_ZOOM = 15;

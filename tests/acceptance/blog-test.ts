@@ -640,6 +640,68 @@ module('Acceptance | blog', function (hooks) {
       .hasAttribute('data-terrain', /^(loading|on)$/, 'and on the terrain');
   });
 
+  test('under the map, the altitude profile: hovered, its numbers and a walker on the map', async function (assert) {
+    await visit(SCRAMBLE);
+
+    const strip = '[data-test-route] figure .route-profile';
+
+    assert.dom(strip).exists('the track has elevations');
+    assert
+      .dom(`${strip} .route-profile-scale`)
+      .includesText('1,790 m')
+      .includesText('652 m', 'its highest and lowest');
+    assert
+      .dom('[data-test-route] .route-layers')
+      .includesText('Altitude', 'a switch for it');
+    assert
+      .dom(`${strip} .route-profile-photo`)
+      .exists('the photos taken close to the track stand on it');
+
+    const chart = find(`${strip} .route-profile-chart`)!;
+    const box = chart.getBoundingClientRect();
+
+    await triggerEvent(chart, 'pointermove', {
+      clientX: box.left + box.width / 2,
+      clientY: box.top + box.height / 2,
+    });
+
+    assert.dom(strip).hasClass('is-at');
+    assert
+      .dom(`${strip} .route-number-from-start`)
+      .hasAttribute('title', 'From the start')
+      .includesText('km');
+    assert.dom(`${strip} .route-number-to-climb`).includesText(' m');
+    assert
+      .dom('[data-test-route] .route-walker')
+      .exists('a walker on the map where it is');
+
+    await triggerEvent(chart, 'pointerleave');
+
+    assert.dom(strip).doesNotHaveClass('is-at');
+    assert.dom('[data-test-route] .route-walker').doesNotExist('gone again');
+
+    await click(`${strip} .route-play`);
+    assert
+      .dom(`${strip} .route-play`)
+      .hasAttribute('aria-label', 'Pause', 'it walks the route');
+    await waitUntil(() => find('[data-test-route] .route-walker'), {
+      timeout: 5000,
+    });
+    await click(`${strip} .route-play`);
+    assert
+      .dom(`${strip} .route-play`)
+      .hasAttribute('aria-label', 'Walk the route', 'paused');
+
+    await click(
+      [...document.querySelectorAll('[data-test-route] .route-layers label')]
+        .find((label) => label.textContent?.includes('Altitude'))!
+        .querySelector('input')!,
+    );
+
+    assert.dom(strip).isNotVisible('switched off');
+    assert.true(currentURL().includes('hide=profile'), 'in the address');
+  });
+
   test('a GPX embedded in the text is a map of only its track', async function (assert) {
     await visit(SCRAMBLE);
 

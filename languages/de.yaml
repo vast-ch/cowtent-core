@@ -101,6 +101,15 @@ post:
       track: Route
       photos: Fotos
       points: Punkte
+      profile: Höhenprofil
+    # The altitude profile under the map, and its walk along the route
+    profile:
+      play: Route ablaufen
+      pause: Anhalten
+      from-start: Ab dem Start
+      to-end: Bis zum Ziel
+      climbed: Bisher aufgestiegen
+      to-climb: Noch aufzusteigen
     enlarge: Karte vergrössern
     # The button in the map's lightbox between the flat map and 3D
     three-d: In 3D zeigen

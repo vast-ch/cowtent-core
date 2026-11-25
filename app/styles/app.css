@@ -263,6 +263,172 @@ figure.route .route-map {
   }
 }
 
+/* The walker on the map at the profile's spot: a pin like the photos' */
+.route-map .route-walker {
+  @apply pointer-events-none block w-8;
+
+  & .route-bubble {
+    @apply flex flex-col items-center drop-shadow-md;
+  }
+
+  & svg {
+    @apply aspect-square w-full rounded-full bg-accent-600 p-1 text-white ring-2 ring-white;
+  }
+
+  & .route-tip {
+    @apply -mt-px h-0 w-0 border-x-[6px] border-t-[9px] border-x-transparent border-t-white;
+  }
+}
+
+/*
+ * The altitude profile (app/content/route-profile.ts), a strip along the
+ * map's bottom; the map's own bottom corners move up above it
+ */
+.route-map .route-map-canvas.has-profile {
+  --profile-height: 5.5rem;
+
+  & .maplibregl-ctrl-bottom-left,
+  & .maplibregl-ctrl-bottom-right {
+    bottom: calc(var(--profile-height) + 0.5rem);
+  }
+
+  @media (width >= 640px) {
+    --profile-height: 7rem;
+  }
+}
+
+.route-profile {
+  @apply absolute inset-x-2 bottom-2 z-[2] flex items-stretch gap-2 rounded-xl bg-white/85 p-2 pl-1 font-sans text-stone-900 shadow-md backdrop-blur-sm;
+
+  height: var(--profile-height);
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.route-play {
+  @apply flex w-9 shrink-0 cursor-pointer items-center justify-center self-center rounded-full text-accent-700 hover:bg-accent-50 focus-visible:outline-2 focus-visible:outline-accent-600;
+
+  height: 2.25rem;
+
+  & svg {
+    @apply size-6;
+  }
+}
+
+.route-profile-chart {
+  @apply relative min-w-0 flex-1 cursor-crosshair;
+
+  touch-action: pan-y;
+}
+
+.route-relief {
+  @apply absolute inset-0 size-full overflow-visible;
+
+  & .route-relief-area {
+    @apply fill-stone-400/45;
+  }
+
+  /* The part walked, in the blog's colour */
+  & .route-relief-walked {
+    @apply fill-accent-600;
+
+    fill-opacity: 0.3;
+    clip-path: inset(0 100% 0 0);
+  }
+
+  & .route-relief-line {
+    @apply fill-none stroke-stone-700;
+
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+}
+
+.route-profile-scale {
+  @apply relative w-11 shrink-0 text-right text-[0.625rem] leading-none font-medium whitespace-nowrap text-stone-500 tabular-nums;
+
+  & span {
+    @apply absolute right-0 -translate-y-1/2;
+  }
+}
+
+/* The spot: a line down and a dot on the relief, while it's hovered or walked */
+.route-profile-cursor,
+.route-profile-dot {
+  @apply pointer-events-none absolute hidden;
+
+  .is-at & {
+    @apply block;
+  }
+}
+
+.route-profile-cursor {
+  @apply inset-y-0 w-px -translate-x-1/2 bg-stone-900/60;
+}
+
+.route-profile-dot {
+  @apply size-3 -translate-1/2 rounded-full bg-accent-600 ring-2 ring-white;
+}
+
+/* A photo taken close to the track, standing on the relief where it was */
+.route-profile-photo {
+  @apply absolute z-[1] block size-6 -translate-x-1/2 -translate-y-full cursor-pointer rounded-full drop-shadow transition-transform duration-200 sm:size-7;
+
+  transform-origin: bottom;
+
+  & img {
+    @apply size-full rounded-full object-cover ring-2 ring-white;
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      @apply scale-150;
+    }
+  }
+
+  &.is-shown img {
+    @apply ring-accent-600;
+  }
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+/*
+ * The spot's numbers, above the strip over the spot: how high, from the
+ * start and to the end, climbed and still to climb (the dashed slope)
+ */
+.route-profile-numbers {
+  @apply pointer-events-none invisible absolute bottom-full mb-2 grid grid-cols-2 gap-x-3 gap-y-0.5 rounded-lg bg-stone-900/90 px-2.5 py-1.5 text-xs whitespace-nowrap text-white tabular-nums shadow-lg;
+
+  /* Over the spot, kept inside the strip */
+  left: clamp(0%, calc(var(--at, 0) * 1% - 5rem), calc(100% - 10.5rem));
+
+  .is-at & {
+    @apply visible;
+  }
+
+  & .route-number-height {
+    @apply col-span-2 text-sm font-semibold;
+  }
+
+  & .route-number {
+    @apply flex items-center gap-1;
+
+    & svg {
+      @apply size-4 shrink-0 text-stone-300;
+    }
+  }
+
+  & .route-number-to-end,
+  & .route-number-to-climb {
+    @apply text-stone-300;
+  }
+}
+
 /*
  * A checklist item (- [x], - [?], lib/checklist.mjs): a badge with its
  * symbol where the bullet would be. Anywhere else, like a table, a

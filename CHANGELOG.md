@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.12.0 - 2026-11-25
+
+- **The altitude profile under the map**, like the relief under a route
+  on Strava, for a GPX with elevations: the highest and lowest point
+  beside it, the photos taken within 150 m of the track standing on it
+  (a click opens one). Hovered (or touched), it tells the altitude there,
+  how far it is from the start and to the end, how much is climbed and
+  still to climb, and a walker on the map stands on that spot.
+- **Walk the route**: ▶ walks the walker along the route, the map
+  following it, the part walked tinted in the blog's colour; a click on
+  the profile is where the walk goes on from, a drag of the map pauses it.
+- An "Altitude" switch hides the profile, kept in the address
+  (`hide=profile`). The track for the map keeps each point's elevation
+  (lib/route.mjs).
+
 ## v0.11.1 - 2026-11-25
 
 - **A link to a photo or the map opens it again**: opened straight from

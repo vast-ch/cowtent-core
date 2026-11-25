@@ -99,6 +99,15 @@ post:
       track: Route
       photos: Photos
       points: Points
+      profile: Altitude
+    # The altitude profile under the map, and its walk along the route
+    profile:
+      play: Walk the route
+      pause: Pause
+      from-start: From the start
+      to-end: To the end
+      climbed: Climbed so far
+      to-climb: Still to climb
     enlarge: Enlarge the map
     # The button in the map's lightbox between the flat map and 3D
     three-d: Show in 3D
