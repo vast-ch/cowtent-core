@@ -144,7 +144,7 @@ export class Route extends Component<{ Args: Args }> {
 
         <figure class="route mt-6">
           <div
-            class="route-map"
+            class="route-map isolate flex aspect-[16/15] w-full items-center justify-center overflow-hidden rounded-2xl bg-stone-100 font-sans sm:aspect-[16/10]"
             data-track={{this.track}}
             role="region"
             aria-labelledby="route-title"
@@ -164,7 +164,7 @@ export class Route extends Component<{ Args: Args }> {
           {{#if this.isOpen}}
             <div class="flex min-h-0 flex-1 px-4 pb-4 sm:px-16" data-beside>
               <div
-                class="route-map route-map-lightbox"
+                class="route-map route-map-lightbox isolate min-h-0 w-full flex-1 overflow-hidden rounded-xl bg-stone-100 font-sans"
                 data-track={{this.track}}
                 role="region"
                 aria-label={{t "post.route.map"}}

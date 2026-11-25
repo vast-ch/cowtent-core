@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.13.3 - 2026-11-26
+
+- The altitude profile has a faint tick every 5 km, its distance at the
+  foot.
+- A photo's pin on the map no longer grows under the mouse.
+
 ## v0.13.2 - 2026-11-26
 
 - **The profile's photos are pins like the map's**, the tip on the relief

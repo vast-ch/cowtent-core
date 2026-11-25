@@ -27,6 +27,13 @@ runs `cowtent build` (`bin/cowtent.mjs`).
   (`app/content/route-map-3d.ts`). The altitude profile along the map's
   bottom, its walker and the walk are `app/content/route-profile.ts`. Write maps the MapLibre way: layers of
   the style for the track and points, markers only for HTML like photos.
+- Style with Tailwind classes on the elements, in templates and in the
+  TS that builds the map and the profile (`el(tag, classes)`), states
+  through `group-[.is-at]/name:` and the like. `app/styles/app.css` is only
+  the theme, prose (Markdown we don't write markup for), keyframes and
+  `@utility`s, and other libraries' elements (MapLibre's). No `@apply`
+  blocks for our own elements; a class name like `route-play` stays as a
+  hook for the tests.
 - Tag names come from the blog's site.yaml; `translations/en-us.json` has only
   the app's own (the fact filters).
 - `pnpm test` (QUnit, fixtures), `pnpm build && pnpm test:output`, `pnpm lint`.

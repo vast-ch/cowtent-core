@@ -50,6 +50,8 @@ export const NEAR = 150;
 const SECONDS_PER_KM = 1.5;
 const SHORTEST_WALK = 12;
 const LONGEST_WALK = 45;
+// The profile's ticks, in metres along the route
+const TICK = 5000;
 
 const EARTH = 6371008.8;
 const radians = (degrees: number) => (degrees * Math.PI) / 180;
@@ -205,6 +207,86 @@ export const ICONS = {
 export const WALKER =
   '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><circle cx="13" cy="4" r="2"/><path d="M10.5 7.5l-3 1.5-1.5 4 1.8.6 1.1-2.9 1.2-.6-1.6 8.4L5 21.2l1.4 1.3 4.2-3.4.9-3.6 2 2V22h1.9v-5.7l-2.1-2.1.7-3.5 1.2 1.5H19v-1.9h-2.9l-1.9-3.1c-.5-.8-1.2-1.2-2-1.2-.3 0-.6.1-.9.2z"/><path d="M17.3 9.3l1.4 13h-1l-1.3-12.4z"/></svg>';
 
+/** An element with its classes */
+const el = <K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  className: string,
+) => {
+  const element = document.createElement(tag);
+
+  element.className = className;
+
+  return element;
+};
+
+/**
+ * A photo where it was taken: a round bubble on a pin, the pin's tip on the
+ * place, so the photo doesn't hide it; nothing happens to it under the
+ * mouse. Ringed in the blog's colour while it's the one shown (`is-shown`).
+ */
+export function photoPin(
+  src: string,
+  caption: string,
+  on: 'map' | 'profile',
+): HTMLButtonElement {
+  const pin = el(
+    'button',
+    on === 'map'
+      ? 'route-photo group/pin block cursor-pointer'
+      : 'route-profile-photo group/pin absolute z-[1] block w-5 -translate-x-1/2 -translate-y-full cursor-pointer sm:w-8',
+  );
+  const bubble = el(
+    'span',
+    'route-bubble flex flex-col items-center drop-shadow-md',
+  );
+  const img = el(
+    'img',
+    'aspect-square w-full rounded-full object-cover ring-2 ring-white group-[.is-shown]/pin:ring-4 group-[.is-shown]/pin:ring-accent-600',
+  );
+  const tip = el(
+    'span',
+    `route-tip -mt-px h-0 w-0 border-x-transparent border-t-white group-[.is-shown]/pin:border-t-accent-600 ${
+      on === 'map'
+        ? 'border-x-[6px] border-t-[9px]'
+        : 'border-x-[4px] border-t-[6px] sm:border-x-[5px] sm:border-t-[8px]'
+    }`,
+  );
+
+  pin.type = 'button';
+  pin.title = caption;
+  pin.setAttribute('aria-label', caption);
+  img.src = src;
+  img.alt = '';
+  bubble.append(img, tip);
+  pin.append(bubble);
+
+  return pin;
+}
+
+/** The walker on the map at the profile's spot: a pin like the photos' */
+export function walkerPin(): HTMLButtonElement {
+  const pin = el('button', 'route-walker pointer-events-none block w-8');
+  const bubble = el('span', 'flex flex-col items-center drop-shadow-md');
+
+  pin.type = 'button';
+  pin.tabIndex = -1;
+  pin.setAttribute('aria-hidden', 'true');
+  bubble.innerHTML = WALKER;
+  bubble.firstElementChild!.setAttribute(
+    'class',
+    'aspect-square w-full rounded-full bg-accent-600 p-1 text-white ring-2 ring-white',
+  );
+  bubble.append(
+    el(
+      'span',
+      '-mt-px h-0 w-0 border-x-[6px] border-t-[9px] border-x-transparent border-t-white',
+    ),
+  );
+  pin.append(bubble);
+
+  return pin;
+}
+
 /** What the profile tells the map */
 export interface ProfileEvents {
   /** The spot hovered or walked to, nothing when it's left */
@@ -241,16 +323,24 @@ export function profileChart(
   const x = (distance: number) => (distance / total) * 100;
   const y = (elevation: number) => ((top - elevation) / (top - bottom)) * 100;
 
-  const element = document.createElement('div');
-  element.className = 'route-profile';
+  // A strip along the map's bottom, as high as the map makes room for
+  // (--profile-height, route-map.ts); `is-at` while a spot is hovered or
+  // walked, `with-photos` while the photos' pins are on it
+  const element = el(
+    'div',
+    'route-profile group/profile absolute inset-x-2 bottom-2 z-[2] flex h-(--profile-height) items-stretch gap-2 rounded-xl bg-white/85 p-2 pl-1 font-sans text-stone-900 shadow-md backdrop-blur-sm',
+  );
 
-  // ▶ and the whole route's numbers
-  const play = document.createElement('button');
+  const play = el(
+    'button',
+    'route-play flex size-9 shrink-0 cursor-pointer items-center justify-center self-center rounded-full text-accent-700 hover:bg-accent-50 focus-visible:outline-2 focus-visible:outline-accent-600 [&_svg]:size-6',
+  );
   play.type = 'button';
-  play.className = 'route-play';
 
-  const chart = document.createElement('div');
-  chart.className = 'route-profile-chart';
+  const chart = el(
+    'div',
+    'route-profile-chart relative min-w-0 flex-1 cursor-crosshair touch-pan-y',
+  );
 
   const line = points
     .map(
@@ -260,50 +350,64 @@ export function profileChart(
     .join('');
 
   chart.innerHTML = `
-    <svg class="route-relief" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-      <path class="route-relief-area" d="${line}L100 100L0 100Z"/>
-      <path class="route-relief-walked" d="${line}L100 100L0 100Z"/>
-      <path class="route-relief-line" d="${line}"/>
+    <svg class="route-relief absolute inset-0 size-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <path class="fill-stone-400/45" d="${line}L100 100L0 100Z"/>
+      <path class="route-relief-walked fill-accent-600 [fill-opacity:0.3]" style="clip-path: inset(0 100% 0 0)" d="${line}L100 100L0 100Z"/>
+      <path class="fill-none stroke-stone-700 [stroke-width:1.5] [vector-effect:non-scaling-stroke]" d="${line}"/>
     </svg>`;
 
   // The relief and what's on it, under the room for the pins
-  const plot = document.createElement('div');
+  const plot = el(
+    'div',
+    'absolute inset-x-0 top-0 bottom-0 group-[.with-photos]/profile:top-7 sm:group-[.with-photos]/profile:top-10',
+  );
 
-  plot.className = 'route-profile-plot';
   plot.append(...chart.childNodes);
   chart.append(plot);
 
   const walked = chart.querySelector<SVGPathElement>('.route-relief-walked')!;
-  const cursor = document.createElement('span');
-  cursor.className = 'route-profile-cursor';
-  const dot = document.createElement('span');
-  dot.className = 'route-profile-dot';
+  // The spot, while it's hovered or walked: a line down, and a dot on the
+  // relief over everything else on the strip
+  const cursor = el(
+    'span',
+    'pointer-events-none absolute inset-y-0 z-[2] hidden w-px -translate-x-1/2 bg-stone-900/60 group-[.is-at]/profile:block',
+  );
+  const dot = el(
+    'span',
+    'pointer-events-none absolute z-[3] hidden size-3.5 -translate-1/2 rounded-full bg-accent-600 ring-2 ring-white group-[.is-at]/profile:block',
+  );
 
-  // The numbers at the spot: how high, how far from the start and to the
-  // end, how much climbed and still to climb
-  const numbers = document.createElement('div');
-  numbers.className = 'route-profile-numbers';
+  // The numbers at the spot, above the strip over it: how high, how far from
+  // the start and to the end, how much climbed and still to climb (the
+  // dashed slope)
+  const numbers = el(
+    'div',
+    'route-profile-numbers pointer-events-none invisible absolute bottom-full mb-2 grid w-max grid-cols-2 gap-x-3 gap-y-0.5 rounded-lg bg-stone-900/90 px-2.5 py-1.5 text-xs whitespace-nowrap text-white tabular-nums shadow-lg group-[.is-at]/profile:visible',
+  );
   numbers.setAttribute('aria-live', 'polite');
 
-  const number = (icon: keyof typeof ICONS, label: string) => {
-    const item = document.createElement('span');
-    const value = document.createElement('span');
+  const number = (icon: keyof typeof ICONS, label: string, ahead = false) => {
+    const item = el(
+      'span',
+      `route-number-${icon.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)} flex items-center gap-1 [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-stone-300 ${ahead ? 'text-stone-300' : ''}`,
+    );
+    const value = el('span', 'route-number-value');
 
-    item.className = `route-number route-number-${icon.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`;
     item.title = label;
     item.innerHTML = ICONS[icon];
-    value.className = 'route-number-value';
     item.append(value);
 
     return { item, value };
   };
 
-  const height = document.createElement('span');
-  height.className = 'route-number-height';
+  const height = el(
+    'span',
+    'route-number-height col-span-2 text-sm font-semibold',
+  );
   const fromStart = number('fromStart', labels.fromStart);
-  const toEnd = number('toEnd', labels.toEnd);
+  const toEnd = number('toEnd', labels.toEnd, true);
   const climbed = number('climbed', labels.climbed);
-  const toClimb = number('toClimb', labels.toClimb);
+  const toClimb = number('toClimb', labels.toClimb, true);
 
   numbers.append(
     height,
@@ -316,23 +420,10 @@ export function profileChart(
   // The photos taken close to the track, on pins like the map's, the tip
   // on the relief where it was
   const thumbs = photos.map(({ index, src, caption, distance }) => {
-    const thumb = document.createElement('button');
-    const bubble = document.createElement('span');
-    const img = document.createElement('img');
-    const tip = document.createElement('span');
+    const thumb = photoPin(src, caption, 'profile');
 
-    thumb.type = 'button';
-    thumb.className = 'route-profile-photo';
-    thumb.title = caption;
-    thumb.setAttribute('aria-label', caption);
     thumb.style.left = `${x(distance)}%`;
     thumb.style.top = `${y(pointAt(profile, distance).elevation)}%`;
-    bubble.className = 'route-bubble';
-    tip.className = 'route-tip';
-    img.src = src;
-    img.alt = '';
-    bubble.append(img, tip);
-    thumb.append(bubble);
     thumb.addEventListener('click', (event) => {
       event.stopPropagation();
       on.photo(index);
@@ -344,20 +435,56 @@ export function profileChart(
   chart.append(cursor);
   plot.append(...thumbs.map(({ thumb }) => thumb), dot);
 
-  // The highest and the lowest, in the relief's top and bottom corners
-  const scale = document.createElement('div');
+  // The highest and the lowest, in the relief's top and bottom corners, a
+  // little backing to be read over its line
+  const scale = el(
+    'div',
+    'route-profile-scale pointer-events-none absolute inset-0 z-[2] text-[0.625rem] leading-none font-medium whitespace-nowrap text-stone-600 tabular-nums',
+  );
 
-  scale.className = 'route-profile-scale';
   scale.setAttribute('aria-hidden', 'true');
 
-  for (const metres of [highest, lowest]) {
-    const mark = document.createElement('span');
+  for (const [metres, corner] of [
+    [highest, 'top-0'],
+    [lowest, 'bottom-0'],
+  ] as const) {
+    const mark = el(
+      'span',
+      `absolute left-0 ${corner} rounded bg-white/75 px-1 py-0.5`,
+    );
 
     mark.textContent = altitude(metres, locale);
     scale.append(mark);
   }
 
   plot.append(scale);
+
+  // A tick every 5 km, under the pins and the spot: a faint line down the
+  // relief, its distance at the foot
+  const ticks = el(
+    'div',
+    'route-profile-ticks pointer-events-none absolute inset-0 text-[0.625rem] leading-none font-medium whitespace-nowrap text-stone-500 tabular-nums',
+  );
+  const kilometres = new Intl.NumberFormat(locale, {
+    style: 'unit',
+    unit: 'kilometer',
+    maximumFractionDigits: 0,
+  });
+
+  ticks.setAttribute('aria-hidden', 'true');
+
+  for (let at = TICK; at < total; at += TICK) {
+    const tick = el(
+      'span',
+      'absolute inset-y-0 flex items-end border-l border-stone-500/30 pl-0.5',
+    );
+
+    tick.style.left = `${x(at)}%`;
+    tick.textContent = kilometres.format(at / 1000);
+    ticks.append(tick);
+  }
+
+  plot.prepend(ticks);
   element.append(play, chart, numbers);
 
   // Where the walk is (or was paused), and the spot hovered
@@ -383,7 +510,8 @@ export function profileChart(
     cursor.style.left = left;
     dot.style.left = left;
     dot.style.top = `${y(point.elevation)}%`;
-    numbers.style.setProperty('--at', `${x(distance)}`);
+    // Over the spot, kept inside the strip
+    numbers.style.left = `clamp(0%, calc(${left} - 5.25rem), calc(100% - 10.5rem))`;
     height.textContent = altitude(point.elevation, locale);
     fromStart.value.textContent = km(point.distance, locale);
     toEnd.value.textContent = km(total - point.distance, locale);

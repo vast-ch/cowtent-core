@@ -6,7 +6,8 @@ import {
   distanceAlong,
   profileChart,
   profileOf,
-  WALKER,
+  photoPin,
+  walkerPin,
 } from './route-profile.ts';
 
 import type {
@@ -248,7 +249,10 @@ export async function routeMap(
   // The map's own element, which moves with it (moveTo)
   const element = document.createElement('div');
 
-  element.className = 'route-map-canvas';
+  // As high as the map, the profile's height kept for it
+  // (--profile-height), higher with room for the photos' pins on it
+  element.className =
+    'route-map-canvas size-full [--profile-height:5.5rem] sm:[--profile-height:7rem] has-[.with-photos]:[--profile-height:7.25rem] sm:has-[.with-photos]:[--profile-height:9rem]';
   element.dataset['terrain'] = 'off';
   container.replaceChildren(element);
 
@@ -384,20 +388,9 @@ export async function routeMap(
   const pins = new Map<number, { pin: HTMLElement; marker: Marker }>();
 
   for (const { photo, caption, position, index } of placed) {
-    const pin = button('route-photo');
-    const bubble = document.createElement('span');
-    const img = document.createElement('img');
-    const tip = document.createElement('span');
+    const pin = photoPin(photo.imageUrlFor(480, 'webp') ?? '', caption, 'map');
 
-    pin.title = caption;
-    pin.setAttribute('aria-label', caption);
     pin.style.width = `${size}px`;
-    bubble.className = 'route-bubble';
-    tip.className = 'route-tip';
-    img.src = photo.imageUrlFor(480, 'webp') ?? '';
-    img.alt = '';
-    bubble.append(img, tip);
-    pin.append(bubble);
     pin.addEventListener('click', (event) => {
       event.stopPropagation();
       on.photo?.(index);
@@ -420,7 +413,11 @@ export async function routeMap(
   if (labels && on.enlarge) {
     map.addControl(
       control((box) => {
-        const enlarge = button('route-enlarge', EXPAND);
+        // flex! over MapLibre's own button styles
+        const enlarge = button(
+          'route-enlarge flex! items-center justify-center text-stone-800 [&_svg]:size-4',
+          EXPAND,
+        );
 
         enlargeBox = box;
 
@@ -439,7 +436,7 @@ export async function routeMap(
   if (labels) {
     map.addControl(
       control((box) => {
-        threeD = button('route-3d');
+        threeD = button('route-3d text-xs font-bold text-stone-800');
         threeD.addEventListener('click', () => {
           map.easeTo(
             { pitch: map.getPitch() > 0 ? 0 : PITCH, bearing: 0 },
@@ -456,17 +453,7 @@ export async function routeMap(
   // a walker on the map where it's hovered, or walked along when played
   const profile = labels ? profileOf(track) : undefined;
   const locale = document.documentElement.lang || undefined;
-  const walker = button('route-walker');
-  const walkerBubble = document.createElement('span');
-  const walkerTip = document.createElement('span');
-
-  walkerBubble.className = 'route-bubble';
-  walkerBubble.innerHTML = WALKER;
-  walkerTip.className = 'route-tip';
-  walkerBubble.append(walkerTip);
-  walker.append(walkerBubble);
-  walker.tabIndex = -1;
-  walker.setAttribute('aria-hidden', 'true');
+  const walker = walkerPin();
 
   // Seen even behind a ridge in 3D, where MapLibre would fade it
   const walkerMarker = new maplibregl.Marker({
@@ -548,6 +535,8 @@ export async function routeMap(
       control((box) => {
         for (const name of names) {
           const label = document.createElement('label');
+
+          label.className = 'flex cursor-pointer items-center gap-1.5';
           const input = document.createElement('input');
 
           input.type = 'checkbox';
@@ -562,7 +551,7 @@ export async function routeMap(
           box.append(label);
           switches.set(name, input);
         }
-      }, 'route-layers'),
+      }, 'route-layers flex flex-col gap-1 px-2.5 py-2 text-sm text-stone-800'),
       'top-right',
     );
   }

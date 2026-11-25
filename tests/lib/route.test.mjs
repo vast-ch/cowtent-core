@@ -43,7 +43,7 @@ test('an embedded GPX is a map with a download link, a linked one a link', async
 
   assert.match(
     page,
-    /^<figure class="route"><div class="route-map not-prose" data-track="\[\[46\.6322,7\.9012\],\[46\.6511,7\.9922\]\]" role="region" aria-label="Up the gully"><a href="https:\/\/map\.geo\.admin\.ch\/#\/map\?[^"]+GPX%7Chttps:\/\/blog\.example\.com\/assets\/route\.gpx">Up the gully<\/a><\/div>/,
+    /^<figure class="route"><div class="route-map not-prose[^"]*" data-track="\[\[46\.6322,7\.9012\],\[46\.6511,7\.9922\]\]" role="region" aria-label="Up the gully"><a href="https:\/\/map\.geo\.admin\.ch\/#\/map\?[^"]+GPX%7Chttps:\/\/blog\.example\.com\/assets\/route\.gpx">Up the gully<\/a><\/div>/,
   );
   assert.match(
     page,
