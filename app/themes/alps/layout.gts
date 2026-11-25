@@ -27,14 +27,19 @@ const ROOT = [
 ].join(' ');
 
 /*
- * The title of a post or page sticks right under the band, which is 8rem
- * down on a phone (the bar and the band), 9rem from sm and 7rem on lg, and
- * shrinks on the way there, on the page's background as wide as the page
- * (shrink-on-scroll, app/styles/app.css)
+ * The title of a post or page goes into the band, in the place of the
+ * section's name, as the page scrolls past it (into-band,
+ * app/styles/app.css): it sticks at the band's bottom, 8rem down on a
+ * phone (the bar and the band), 9rem from sm and 7rem on lg, and shrinks
+ * to the name's size there, its bottom on the name's line (the band's
+ * padding under it)
  */
 const TITLE = [
-  '[&>article>h1]:sticky [&>article>h1]:z-10 [&>article>h1]:shrink-on-scroll [&>article>h1]:[--title-bg:var(--color-stone-50)]',
+  '[&>article>h1]:z-30 [&>article>h1]:into-band',
   '[&>article>h1]:top-32 sm:[&>article>h1]:top-36 lg:[&>article>h1]:top-28',
+  '[&>article>h1]:[--into-band-gap:0.5rem] lg:[&>article>h1]:[--into-band-gap:0.75rem]',
+  // text-4xl to text-2xl, text-5xl to text-2xl, and on lg to text-3xl
+  '[&>article>h1]:[--into-band-scale:0.667] sm:[&>article>h1]:[--into-band-scale:0.5] lg:[&>article>h1]:[--into-band-scale:0.625]',
 ].join(' ');
 
 /*
@@ -118,12 +123,12 @@ export const Layout: TOC<{
             <path d={{PEAKS}} fill="url(#alps-peaks)" />
           </svg>
           <p
-            class="absolute inset-x-0 bottom-0 px-4 pb-2 font-display text-2xl font-semibold text-stone-900 [text-shadow:0_0_8px_var(--color-stone-50),0_0_16px_var(--color-stone-50)] sm:px-6 lg:px-12 lg:pb-3 lg:text-3xl"
+            class="absolute inset-x-0 bottom-0 band-section-out px-4 pb-2 font-display text-2xl font-semibold text-stone-900 [text-shadow:0_0_8px_var(--color-stone-50),0_0_16px_var(--color-stone-50)] sm:px-6 lg:px-12 lg:pb-3 lg:text-3xl"
             data-test-section
           ><SectionName /></p>
         </div>
         {{! A post or page starts where the section name above it does }}
-        {{! The title of a post or page stays under the band too, smaller }}
+        {{! The title of a post or page takes the section name's place }}
         <main
           class="max-w-5xl px-4 pt-8 pb-12 sm:px-6 lg:px-12 lg:pt-10 [&_article]:ml-0
             {{TITLE}}"

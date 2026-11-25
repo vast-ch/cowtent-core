@@ -331,7 +331,7 @@ export function profileChart(
 
   chart.append(cursor, dot, ...thumbs.map(({ thumb }) => thumb));
 
-  // The highest and the lowest, at their height, beside the relief
+  // The highest and the lowest, in the relief's top and bottom corners
   const scale = document.createElement('div');
 
   scale.className = 'route-profile-scale';
@@ -341,11 +341,11 @@ export function profileChart(
     const mark = document.createElement('span');
 
     mark.textContent = altitude(metres, locale);
-    mark.style.top = `${y(metres)}%`;
     scale.append(mark);
   }
 
-  element.append(play, scale, chart, numbers);
+  chart.append(scale);
+  element.append(play, chart, numbers);
 
   // Where the walk is (or was paused), and the spot hovered
   let position: number | undefined;

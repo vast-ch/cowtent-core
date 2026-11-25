@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.13.0 - 2026-11-25
+
+- **The title goes into the mountains** (alps): scrolled past, a post's
+  or page's title shrinks and rises into the band over the page, in the
+  place of the section's name, which rises out. No strip of its own under
+  the band any more, so more of the post shows.
+- The altitude profile's highest and lowest altitude are in the relief's
+  corners, not in a column beside it, so the relief is wider.
+
 ## v0.12.0 - 2026-11-25
 
 - **The altitude profile under the map**, like the relief under a route
