@@ -14,18 +14,22 @@ import { LIGHTBOX_BUTTON, Lightbox } from './lightbox.gts';
 import type { GalleryPhoto } from '../content/gallery.ts';
 import type PostViewService from '../services/post-view.ts';
 
-// How far a finger has to move to change the photo
-const SWIPE = 50;
-
 // The pin on a photo that the route's map has too
 const PIN_PATH =
   'M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11zm0-8.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z';
 
+/*
+ * The arrows to the previous and next photo, halfway down its sides: on a
+ * phone over the photo's edges, on a dark round of their own so they show
+ * on any photo; from sm beside it, where there's room
+ */
+const ARROW = `${LIGHTBOX_BUTTON} absolute top-1/2 -translate-y-1/2 bg-slate-950/55 p-2.5 backdrop-blur-sm sm:bg-transparent sm:p-3 sm:backdrop-blur-none`;
+
 /**
  * The photos of a post at the end of the article, its cover first, then
  * its gallery folder's (lib/cover.mjs): a masonry grid of thumbnails, each
- * a link to the full photo, which opens in a full-screen lightbox instead, as does a photo's pin on the route's map. ← → or a
- * swipe change the photo; Esc, the close button or a click beside the
+ * a link to the full photo, which opens in a full-screen lightbox instead, as does a photo's pin on the route's map. The arrows or
+ * ← → change the photo; Esc, the close button or a click beside the
  * photo closes it. With a route map (`@onMap`), a photo that knows where
  * it was taken has a button in the full-screen view that shows it there,
  * in the map's lightbox (app/content/route-map.ts).
@@ -34,8 +38,6 @@ export class Gallery extends Component<{
   Args: { photos: GalleryPhoto[]; onMap?: boolean };
 }> {
   @service declare postView: PostViewService;
-
-  touchX = 0;
 
   get current() {
     return this.postView.view === 'photo'
@@ -94,16 +96,6 @@ export class Gallery extends Component<{
     if (event.key === 'ArrowLeft') this.step(-1);
   }
 
-  @action touchStart(event: TouchEvent) {
-    this.touchX = event.changedTouches[0]?.clientX ?? 0;
-  }
-
-  @action touchEnd(event: TouchEvent) {
-    const moved = (event.changedTouches[0]?.clientX ?? 0) - this.touchX;
-
-    if (Math.abs(moved) > SWIPE && this.hasMany) this.step(moved < 0 ? 1 : -1);
-  }
-
   <template>
     <section class="mt-16" aria-labelledby="gallery-title" data-test-gallery>
       <h2 id="gallery-title" class="section-heading">
@@ -139,8 +131,6 @@ export class Gallery extends Component<{
         @label={{this.position}}
         @closeLabel={{t "post.gallery.close"}}
         {{on "keydown" this.key}}
-        {{on "touchstart" this.touchStart passive=true}}
-        {{on "touchend" this.touchEnd}}
       >
         <:bar>
           {{#if this.itemOnMap}}
@@ -184,8 +174,7 @@ export class Gallery extends Component<{
             {{#if this.hasMany}}
               <button
                 type="button"
-                class="{{LIGHTBOX_BUTTON}}
-                  absolute top-1/2 left-2 hidden -translate-y-1/2 p-3 sm:block"
+                class="{{ARROW}} left-2"
                 aria-label={{t "post.gallery.previous"}}
                 {{on "click" (fn this.step -1)}}
               >
@@ -201,8 +190,7 @@ export class Gallery extends Component<{
               </button>
               <button
                 type="button"
-                class="{{LIGHTBOX_BUTTON}}
-                  absolute top-1/2 right-2 hidden -translate-y-1/2 p-3 sm:block"
+                class="{{ARROW}} right-2"
                 aria-label={{t "post.gallery.next"}}
                 data-test-lightbox-next
                 {{on "click" (fn this.step 1)}}

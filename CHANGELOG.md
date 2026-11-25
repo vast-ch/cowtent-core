@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.13.1 - 2026-11-25
+
+- **The gallery's arrows on a phone too**: in the full-screen photo they
+  sit over the photo's edges, on a dark round so they show on any photo
+  (from 640 px wide they stay beside it, as before). A swipe no longer
+  changes the photo: the arrows (or ← →) do.
+
 ## v0.13.0 - 2026-11-25
 
 - **The title goes into the mountains** (alps): scrolled past, a post's
