@@ -8,6 +8,13 @@ export interface GalleryPhoto {
   caption: string;
   /** [lat, lon] from its GPS, for its pin on the route's map */
   position: [number, number] | null;
+  /**
+   * The route it was taken on, by its place in the post's routes: by its
+   * time, or else the closest (lib/route.mjs)
+   */
+  route: number | null;
+  /** [lat, lon] on that route at the time it was taken, for the profile */
+  along: [number, number] | null;
 }
 
 /**

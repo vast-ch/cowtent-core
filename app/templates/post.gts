@@ -115,17 +115,17 @@ const Neighbour: TOC<{
         {{/let}}
 
         <div class="mt-10 space-y-12">
-          {{#if (or post.facts @model.route)}}
-            <Facts @facts={{post.facts}} @route={{@model.route}} />
+          {{#if (or post.facts @model.routes.length)}}
+            <Facts @facts={{post.facts}} @routes={{@model.routes}} />
           {{/if}}
 
           {{#if post.html}}
             <Prose @html={{post.html}} />
           {{/if}}
 
-          {{#if @model.route}}
+          {{#if @model.routes.length}}
             <Route
-              @route={{@model.route}}
+              @routes={{@model.routes}}
               @points={{post.facts.points}}
               @photos={{@model.gallery}}
             />
@@ -134,7 +134,8 @@ const Neighbour: TOC<{
           {{#if @model.gallery.length}}
             <Gallery
               @photos={{@model.gallery}}
-              @onMap={{if @model.route true false}}
+              @onMap={{if @model.routes.length true false}}
+              @byRoute={{gt @model.routes.length 1}}
             />
           {{/if}}
 
@@ -172,10 +173,14 @@ const Neighbour: TOC<{
       newer?: Post;
       older?: Post;
       gallery: GalleryPhoto[];
-      route?: PostRoute;
+      routes: PostRoute[];
     } | null;
   };
 }>;
+
+function gt(a: number, b: number) {
+  return a > b;
+}
 
 function or(...values: unknown[]) {
   return values.some(Boolean);

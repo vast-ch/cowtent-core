@@ -106,6 +106,9 @@ post:
       pause: Pause
       from-start: From the start
       to-end: To the end
+      # A click on a route's stretch of the profile zooms in on it
+      zoom-in: Zoom in on this route
+      zoom-out: All the routes
       climbed: Climbed so far
       to-climb: Still to climb
     enlarge: Enlarge the map

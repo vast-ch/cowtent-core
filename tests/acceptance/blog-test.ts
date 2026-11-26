@@ -411,12 +411,22 @@ module('Acceptance | blog', function (hooks) {
       .hasAttribute('href', /SAC-Wanderskala/);
     assert.dom('[data-test-fact="Links"] td').hasText('Route · Strava');
     assert
-      .dom('[data-test-fact-route] a[download]')
-      .hasText('Download the GPX', "route.gpx's download is the last fact")
-      .hasAttribute('href', /\/route-[\w-]+\.gpx$/);
+      .dom('[data-test-fact-route]')
+      .exists({ count: 1 }, 'one row for all the routes, the last fact');
     assert
-      .dom('[data-test-fact-route] a[href^="https://map.geo.admin.ch/#/map?"]')
-      .hasText('map.geo.admin.ch');
+      .dom('[data-test-fact-route] td')
+      .hasText('Route 1 · Route 2', 'each to click, like the links');
+    assert
+      .dom('[data-test-route-download]')
+      .hasAttribute('download')
+      .hasAttribute('title', 'Download the GPX')
+      .hasAttribute('href', /\/01-route-[\w-]+\.gpx$/);
+    assert
+      .dom('[data-test-route-download] .bg-colour-2-600')
+      .exists("with a dot of its line's colour");
+    assert
+      .dom('[data-test-fact-route] a[href*="openstreetmap.org"]')
+      .doesNotExist();
   });
 
   test('posts can be filtered by their facts', async function (assert) {
@@ -709,6 +719,45 @@ module('Acceptance | blog', function (hooks) {
 
     assert.dom(strip).isNotVisible('switched off');
     assert.true(currentURL().includes('hide=profile'), 'in the address');
+  });
+
+  test('several routes: one profile in their colours, a click zooms in on one', async function (assert) {
+    await visit(SCRAMBLE);
+
+    const strip = '[data-test-route] figure .route-profile';
+
+    assert
+      .dom(`${strip} .route-relief-stretch`)
+      .exists({ count: 2 }, '01 - route.gpx and 02 - route.gpx end to end');
+    assert
+      .dom(`${strip} .route-relief-stretch[data-route="0"]`)
+      .hasClass('fill-colour-2-500', 'the first in colour-2');
+    assert
+      .dom(`${strip} .route-relief-stretch[data-route="1"]`)
+      .hasClass('fill-colour-3-500', 'the next in colour-3');
+    assert.dom(`${strip} .route-zoom-out`).isNotVisible();
+
+    const chart = find(`${strip} .route-profile-chart`)!;
+    const box = chart.getBoundingClientRect();
+
+    await click(chart, { clientX: box.right - 2, clientY: box.bottom - 4 });
+
+    assert.dom(strip).hasClass('is-zoomed', 'on the route clicked');
+    assert.dom(`${strip} .route-relief-stretch`).exists({ count: 1 });
+    assert
+      .dom(`${strip} .route-relief-stretch`)
+      .hasAttribute('data-route', '1', 'the second, at the right end');
+    assert
+      .dom(`${strip} .route-profile-scale`)
+      .includesText('980 m', 'its own lowest');
+
+    await click(`${strip} .route-zoom-out`);
+
+    assert.dom(strip).doesNotHaveClass('is-zoomed', 'all again');
+    assert.dom(`${strip} .route-relief-stretch`).exists({ count: 2 });
+    assert
+      .dom('[data-test-gallery-photo].ring-colour-2-400')
+      .exists('a photo taken on the first route, ringed in its colour');
   });
 
   test('a GPX embedded in the text is a map of only its track', async function (assert) {

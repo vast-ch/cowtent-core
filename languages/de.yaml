@@ -108,6 +108,8 @@ post:
       pause: Anhalten
       from-start: Ab dem Start
       to-end: Bis zum Ziel
+      zoom-in: Auf diese Route zoomen
+      zoom-out: Alle Routen
       climbed: Bisher aufgestiegen
       to-climb: Noch aufzusteigen
     enlarge: Karte vergrössern

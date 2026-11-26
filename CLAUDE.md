@@ -27,11 +27,19 @@ runs `cowtent build` (`bin/cowtent.mjs`).
   up to seven, the first colour-1): `lib/colours.mjs` makes their shades,
   served as `virtual:blog-colours.css`, bundled
   after `app.css` (`app/app.ts`).
+- A post's routes are `route.gpx` or numbered like the gallery's photos
+  (`01 - route.gpx`, `lib/route.mjs` with `nameOf` of `lib/gallery.mjs`):
+  one map, one profile end to end, route N in `colour-(N+1)`
+  (`app/content/route-colours.ts`), colour-1 the accent. A photo belongs
+  to a route by its time (GPS time, or the camera's set right by the
+  gallery's others) against the GPX's, else by place; at that time it
+  stands on the profile.
 - A post's map and its lightboxes (`app/components/lightbox.gts`, on
   Frontile's Overlay) show what the post's query params say
   (`app/services/post-view.ts`); the maps only show state and report
   what's done to them by hand (`app/content/route-map.ts`, MapLibre, loaded
-  when the map is about to be seen). Tilted is 3D, on swisstopo's terrain
+  when the map is about to be seen). Tilted is 3D, on the AWS terrain tiles. Map and terrain are
+  winds.mobi's: tile.osm.ch, worldwide
   (`app/content/route-map-3d.ts`). The altitude profile along the map's
   bottom, its walker and the walk are `app/content/route-profile.ts`. Write maps the MapLibre way: layers of
   the style for the track and points, markers only for HTML like photos.

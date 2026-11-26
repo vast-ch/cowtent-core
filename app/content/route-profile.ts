@@ -3,8 +3,13 @@
  * the track's elevation along its distance, like the relief under a
  * route on Strava. Hovered, it tells how far it is from the start and to
  * the end, how much is climbed and still to climb there, and the map
- * shows a walker on that spot; played, the walker walks the route.
+ * shows a walker on that spot; played, the walker walks the route. A
+ * post's routes (01 - route.gpx, 02 - route.gpx, …) are one relief end to
+ * end, each stretch in its route's colour (app/content/route-colours.ts);
+ * a click on one zooms in on it, and a button back out.
  */
+
+import { routeClasses } from './route-colours.ts';
 
 /** A spot of the track, `distance` and the climbs in metres from the start */
 export interface ProfilePoint {
@@ -32,13 +37,19 @@ export interface ProfileLabels {
   toEnd: string;
   climbed: string;
   toClimb: string;
+  zoomIn: string;
+  zoomOut: string;
 }
 
-/** A photo on the profile, the gallery's `index`, where it's closest */
+/**
+ * A photo on the profile, the gallery's `index`: on `route`, `distance`
+ * metres from that route's start
+ */
 export interface ProfilePhoto {
   index: number;
   src: string;
   caption: string;
+  route: number;
   distance: number;
 }
 
@@ -50,8 +61,10 @@ export const NEAR = 150;
 const SECONDS_PER_KM = 1.5;
 const SHORTEST_WALK = 12;
 const LONGEST_WALK = 45;
-// The profile's ticks, in metres along the route
-const TICK = 5000;
+// The profile's ticks, in metres along the route: the shortest step that
+// makes at most TICKS of them
+const TICK_STEPS = [1000, 2000, 5000, 10000, 20000, 50000, 100000];
+const TICKS = 8;
 
 const EARTH = 6371008.8;
 const radians = (degrees: number) => (degrees * Math.PI) / 180;
@@ -117,6 +130,50 @@ export function profileOf(
     descent,
     lowest: Math.min(...elevations),
     highest: Math.max(...elevations),
+  };
+}
+
+/**
+ * Routes end to end, one after the other: the distances and climbs go on
+ * from where the last one stopped. `starts` is where each begins along it.
+ */
+export function joinProfiles(profiles: Profile[]): {
+  profile: Profile;
+  starts: number[];
+} {
+  const points: ProfilePoint[] = [];
+  const starts: number[] = [];
+  let distance = 0;
+  let ascent = 0;
+  let descent = 0;
+
+  for (const profile of profiles) {
+    starts.push(distance);
+
+    for (const point of profile.points) {
+      points.push({
+        ...point,
+        distance: distance + point.distance,
+        ascent: ascent + point.ascent,
+        descent: descent + point.descent,
+      });
+    }
+
+    distance += profile.distance;
+    ascent += profile.ascent;
+    descent += profile.descent;
+  }
+
+  return {
+    profile: {
+      points,
+      distance,
+      ascent,
+      descent,
+      lowest: Math.min(...profiles.map((profile) => profile.lowest)),
+      highest: Math.max(...profiles.map((profile) => profile.highest)),
+    },
+    starts,
   };
 }
 
@@ -247,7 +304,7 @@ export function photoPin(
     'span',
     `route-tip -mt-px h-0 w-0 border-x-transparent border-t-white group-[.is-shown]/pin:border-t-colour-1-600 ${
       on === 'map'
-        ? 'border-x-[6px] border-t-[9px]'
+        ? 'border-x-[4px] border-t-[6px]'
         : 'border-x-[4px] border-t-[6px] sm:border-x-[5px] sm:border-t-[8px]'
     }`,
   );
@@ -292,6 +349,8 @@ export interface ProfileEvents {
   /** The spot hovered or walked to, nothing when it's left */
   at: (point: ProfilePoint | undefined, walking: boolean) => void;
   photo: (index: number) => void;
+  /** Zoomed in on a route, by its place, or out to all of them */
+  zoomed?: (route: number | undefined) => void;
 }
 
 export interface ProfileChart {
@@ -303,29 +362,28 @@ export interface ProfileChart {
   remove: () => void;
 }
 
+const ZOOM_OUT = svg('<path d="M15 18l-6-6 6-6"/>');
+
 /**
  * The profile as a strip of the map: a play button, the relief with the
- * photos taken close to the track, and, at the spot hovered, its numbers
+ * photos taken on the way, and, at the spot hovered, its numbers. With
+ * more than one route, all of them end to end, each in its colour; a
+ * click on one shows only it, the button over the relief all again.
  */
 export function profileChart(
-  profile: Profile,
+  profiles: Profile[],
   photos: ProfilePhoto[],
   labels: ProfileLabels,
   on: ProfileEvents,
   locale?: string,
 ): ProfileChart {
-  const { points, distance: total, lowest, highest } = profile;
-  // A little room above and below the relief, and never flatter than 100 m;
-  // the photos' pins have their own room above it
-  const span = Math.max(highest - lowest, 100);
-  const bottom = lowest - span * 0.08;
-  const top = bottom + span * 1.12;
-  const x = (distance: number) => (distance / total) * 100;
-  const y = (elevation: number) => ((top - elevation) / (top - bottom)) * 100;
+  const joined = joinProfiles(profiles);
+  const many = profiles.length > 1;
 
   // A strip along the map's bottom, as high as the map makes room for
   // (--profile-height, route-map.ts); `is-at` while a spot is hovered or
-  // walked, `with-photos` while the photos' pins are on it
+  // walked, `with-photos` while the photos' pins are on it, `is-zoomed`
+  // while it shows one of several routes
   const element = el(
     'div',
     'route-profile group/profile absolute inset-x-2 bottom-2 z-[2] flex h-(--profile-height) items-stretch gap-2 rounded-xl bg-white/85 p-2 pl-1 font-sans text-stone-900 shadow-md backdrop-blur-sm',
@@ -339,22 +397,8 @@ export function profileChart(
 
   const chart = el(
     'div',
-    'route-profile-chart relative min-w-0 flex-1 cursor-crosshair touch-pan-y',
+    `route-profile-chart relative min-w-0 flex-1 touch-pan-y ${many ? 'cursor-zoom-in group-[.is-zoomed]/profile:cursor-crosshair' : 'cursor-crosshair'}`,
   );
-
-  const line = points
-    .map(
-      (point, index) =>
-        `${index ? 'L' : 'M'}${x(point.distance).toFixed(2)} ${y(point.elevation).toFixed(2)}`,
-    )
-    .join('');
-
-  chart.innerHTML = `
-    <svg class="route-relief absolute inset-0 size-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-      <path class="fill-stone-400/45" d="${line}L100 100L0 100Z"/>
-      <path class="route-relief-walked fill-colour-1-600 [fill-opacity:0.3]" style="clip-path: inset(0 100% 0 0)" d="${line}L100 100L0 100Z"/>
-      <path class="fill-none stroke-stone-700 [stroke-width:1.5] [vector-effect:non-scaling-stroke]" d="${line}"/>
-    </svg>`;
 
   // The relief and what's on it, under the room for the pins
   const plot = el(
@@ -362,10 +406,18 @@ export function profileChart(
     'absolute inset-x-0 top-0 bottom-0 group-[.with-photos]/profile:top-7 sm:group-[.with-photos]/profile:top-10',
   );
 
-  plot.append(...chart.childNodes);
   chart.append(plot);
 
-  const walked = chart.querySelector<SVGPathElement>('.route-relief-walked')!;
+  // Back to all the routes, over the relief's top right while zoomed in
+  const zoomOut = el(
+    'button',
+    'route-zoom-out absolute top-0 right-0 z-[4] hidden cursor-pointer items-center gap-0.5 rounded-full bg-white/90 py-0.5 pr-2 pl-1 text-xs font-medium text-colour-1-700 shadow-sm ring-1 ring-stone-900/10 group-[.is-zoomed]/profile:flex hover:bg-colour-1-50 focus-visible:outline-2 focus-visible:outline-colour-1-600 [&_svg]:size-3.5',
+  );
+
+  zoomOut.type = 'button';
+  zoomOut.innerHTML = ZOOM_OUT;
+  zoomOut.append(labels.zoomOut);
+
   // The spot, while it's hovered or walked: a line down, and a dot on the
   // relief over everything else on the strip
   const cursor = el(
@@ -417,75 +469,164 @@ export function profileChart(
     toClimb.item,
   );
 
-  // The photos taken close to the track, on pins like the map's, the tip
-  // on the relief where it was
-  const thumbs = photos.map(({ index, src, caption, distance }) => {
-    const thumb = photoPin(src, caption, 'profile');
+  chart.append(cursor, zoomOut);
+  element.append(play, chart, numbers);
 
-    thumb.style.left = `${x(distance)}%`;
-    thumb.style.top = `${y(pointAt(profile, distance).elevation)}%`;
-    thumb.addEventListener('click', (event) => {
-      event.stopPropagation();
-      on.photo(index);
-    });
-
-    return { thumb, index };
-  });
-
-  chart.append(cursor);
-  plot.append(...thumbs.map(({ thumb }) => thumb), dot);
-
-  // The highest and the lowest, in the relief's top and bottom corners, a
-  // little backing to be read over its line
-  const scale = el(
-    'div',
-    'route-profile-scale pointer-events-none absolute inset-0 z-[2] text-[0.625rem] leading-none font-medium whitespace-nowrap text-stone-600 tabular-nums',
-  );
-
-  scale.setAttribute('aria-hidden', 'true');
-
-  for (const [metres, corner] of [
-    [highest, 'top-0'],
-    [lowest, 'bottom-0'],
-  ] as const) {
-    const mark = el(
-      'span',
-      `absolute left-0 ${corner} rounded bg-white/75 px-1 py-0.5`,
-    );
-
-    mark.textContent = altitude(metres, locale);
-    scale.append(mark);
-  }
-
-  plot.append(scale);
-
-  // A tick every 5 km, under the pins and the spot: a faint line down the
-  // relief, its distance at the foot
-  const ticks = el(
-    'div',
-    'route-profile-ticks pointer-events-none absolute inset-0 text-[0.625rem] leading-none font-medium whitespace-nowrap text-stone-500 tabular-nums',
-  );
   const kilometres = new Intl.NumberFormat(locale, {
     style: 'unit',
     unit: 'kilometer',
     maximumFractionDigits: 0,
   });
 
-  ticks.setAttribute('aria-hidden', 'true');
+  // What it shows: all the routes, or the one zoomed in on
+  let zoomed: number | undefined;
+  let profile = joined.profile;
+  let total = profile.distance;
+  let x = (distance: number) => (distance / total) * 100;
+  let y = (elevation: number) => elevation;
+  let walked!: SVGElement;
+  let thumbs: { thumb: HTMLButtonElement; index: number }[] = [];
+  // What show() was last told, for the pins drawn anew on a zoom
+  let shownState = {
+    withPhotos: true,
+    ringed: undefined as number | undefined,
+  };
 
-  for (let at = TICK; at < total; at += TICK) {
-    const tick = el(
-      'span',
-      'absolute inset-y-0 flex items-end border-l border-stone-500/30 pl-0.5',
+  // The relief of what it shows, the ticks, the scale and the photos' pins
+  const draw = () => {
+    profile = zoomed === undefined ? joined.profile : profiles[zoomed]!;
+    total = profile.distance;
+
+    const { lowest, highest } = profile;
+    // A little room above and below the relief, and never flatter than
+    // 100 m; the photos' pins have their own room above it
+    const span = Math.max(highest - lowest, 100);
+    const bottom = lowest - span * 0.08;
+    const top = bottom + span * 1.12;
+
+    x = (distance: number) => (distance / total) * 100;
+    y = (elevation: number) => ((top - elevation) / (top - bottom)) * 100;
+
+    const path = (points: ProfilePoint[]) =>
+      points
+        .map(
+          (point, index) =>
+            `${index ? 'L' : 'M'}${x(point.distance).toFixed(2)} ${y(point.elevation).toFixed(2)}`,
+        )
+        .join('');
+    const area = (points: ProfilePoint[]) =>
+      `${path(points)}L${x(points.at(-1)!.distance).toFixed(2)} 100L${x(points[0]!.distance).toFixed(2)} 100Z`;
+    // Each route's stretch in its colour
+    const stretches =
+      zoomed === undefined
+        ? profiles.map((route, index) => {
+            const first = profiles
+              .slice(0, index)
+              .reduce((sum, { points }) => sum + points.length, 0);
+
+            return {
+              index,
+              points: profile.points.slice(first, first + route.points.length),
+            };
+          })
+        : [{ index: zoomed, points: profile.points }];
+
+    plot.innerHTML = `
+      <svg class="route-relief absolute inset-0 size-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        ${stretches
+          .map(
+            ({ index, points }) =>
+              `<path class="route-relief-stretch ${routeClasses(index).fill} [fill-opacity:0.45]" data-route="${index}" d="${area(points)}"/>`,
+          )
+          .join('')}
+        <path class="route-relief-walked fill-colour-1-600 [fill-opacity:0.3]" style="clip-path: inset(0 100% 0 0)" d="${area(profile.points)}"/>
+        <path class="fill-none stroke-stone-700 [stroke-width:1.5] [vector-effect:non-scaling-stroke]" d="${path(profile.points)}"/>
+      </svg>`;
+    walked = plot.querySelector<SVGElement>('.route-relief-walked')!;
+
+    // A tick every so many km, under the pins and the spot: a faint line
+    // down the relief, its distance at the foot
+    const ticks = el(
+      'div',
+      'route-profile-ticks pointer-events-none absolute inset-0 text-[0.625rem] leading-none font-medium whitespace-nowrap text-stone-500 tabular-nums',
+    );
+    const step =
+      TICK_STEPS.find((each) => total / each <= TICKS) ?? TICK_STEPS.at(-1)!;
+
+    ticks.setAttribute('aria-hidden', 'true');
+
+    for (let at = step; at < total; at += step) {
+      const tick = el(
+        'span',
+        'absolute inset-y-0 flex items-end border-l border-stone-500/30 pl-0.5',
+      );
+
+      tick.style.left = `${x(at)}%`;
+      tick.textContent = kilometres.format(at / 1000);
+      ticks.append(tick);
+    }
+
+    plot.prepend(ticks);
+
+    // The photos taken on the way, on pins like the map's, the tip on the
+    // relief where it was
+    thumbs = photos.flatMap(({ index, src, caption, route, distance }) => {
+      if (zoomed !== undefined && route !== zoomed) return [];
+
+      const along =
+        distance + (zoomed === undefined ? joined.starts[route]! : 0);
+      const thumb = photoPin(src, caption, 'profile');
+
+      thumb.style.left = `${x(along)}%`;
+      thumb.style.top = `${y(pointAt(profile, along).elevation)}%`;
+      thumb.addEventListener('click', (event) => {
+        event.stopPropagation();
+        on.photo(index);
+      });
+
+      return [{ thumb, index }];
+    });
+    plot.append(...thumbs.map(({ thumb }) => thumb), dot);
+
+    // The highest and the lowest, in the relief's top and bottom corners, a
+    // little backing to be read over its line
+    const scale = el(
+      'div',
+      'route-profile-scale pointer-events-none absolute inset-0 z-[2] text-[0.625rem] leading-none font-medium whitespace-nowrap text-stone-600 tabular-nums',
     );
 
-    tick.style.left = `${x(at)}%`;
-    tick.textContent = kilometres.format(at / 1000);
-    ticks.append(tick);
-  }
+    scale.setAttribute('aria-hidden', 'true');
 
-  plot.prepend(ticks);
-  element.append(play, chart, numbers);
+    for (const [metres, corner] of [
+      [highest, 'top-0'],
+      [lowest, 'bottom-0'],
+    ] as const) {
+      const mark = el(
+        'span',
+        `absolute left-0 ${corner} rounded bg-white/75 px-1 py-0.5`,
+      );
+
+      mark.textContent = altitude(metres, locale);
+      scale.append(mark);
+    }
+
+    plot.append(scale);
+
+    element.classList.toggle('is-zoomed', zoomed !== undefined);
+    chart.title = many && zoomed === undefined ? labels.zoomIn : '';
+    pinsShown();
+  };
+
+  const pinsShown = () => {
+    const { withPhotos, ringed } = shownState;
+
+    element.classList.toggle('with-photos', withPhotos && thumbs.length > 0);
+
+    for (const { thumb, index } of thumbs) {
+      thumb.hidden = !withPhotos;
+      thumb.classList.toggle('is-shown', index === ringed);
+    }
+  };
 
   // Where the walk is (or was paused), and the spot hovered
   let position: number | undefined;
@@ -564,8 +705,27 @@ export function profileChart(
     frame === undefined ? walk() : pause(),
   );
 
+  // Shows one route, or all of them again: the walk starts over
+  const zoom = (route: number | undefined) => {
+    if (route === zoomed) return;
+
+    pause();
+    zoomed = route;
+    position = undefined;
+    hovered = undefined;
+    draw();
+    showAt(undefined);
+    on.zoomed?.(route);
+  };
+
+  zoomOut.setAttribute('aria-label', labels.zoomOut);
+  zoomOut.addEventListener('click', (event) => {
+    event.stopPropagation();
+    zoom(undefined);
+  });
+
   // Hovered (or touched and dragged along), the spot under the pointer
-  const along = (event: PointerEvent) => {
+  const along = (event: PointerEvent | MouseEvent) => {
     const box = chart.getBoundingClientRect();
 
     return (
@@ -583,6 +743,17 @@ export function profileChart(
     showAt(position);
   });
 
+  // A click on a route's stretch zooms in on it
+  chart.addEventListener('click', (event) => {
+    if (!many || zoomed !== undefined) return;
+
+    const at = along(event);
+    const route = joined.starts.findLastIndex((start) => start <= at);
+
+    zoom(Math.max(0, route));
+  });
+
+  draw();
   playing(false);
 
   return {
@@ -597,12 +768,8 @@ export function profileChart(
         showAt(undefined);
       }
 
-      element.classList.toggle('with-photos', withPhotos && thumbs.length > 0);
-
-      for (const { thumb, index } of thumbs) {
-        thumb.hidden = !withPhotos;
-        thumb.classList.toggle('is-shown', index === ringed);
-      }
+      shownState = { withPhotos, ringed };
+      pinsShown();
     },
     pause,
     remove: () => {

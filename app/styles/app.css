@@ -167,7 +167,7 @@ html:has(dialog[open]) {
 }
 
 /*
- * A route on swisstopo's map (app/content/route-map.ts): its own elements
+ * A route on OpenStreetMap (app/content/route-map.ts): its own elements
  * carry their classes; only MapLibre's need CSS. With the altitude profile
  * (app/content/route-profile.ts) along the map's bottom, MapLibre's bottom
  * corners move up above it.

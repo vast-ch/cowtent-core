@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="cowtent tests" xmlns="http://www.topografix.com/GPX/1/1">
+  <trk>
+    <name>The way down</name>
+    <trkseg>
+      <trkpt lat="46.6511" lon="7.9922"><ele>1790</ele></trkpt>
+      <trkpt lat="46.6601" lon="8.0101"><ele>1420</ele></trkpt>
+      <trkpt lat="46.6702" lon="8.0233"><ele>980</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

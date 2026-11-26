@@ -1,7 +1,7 @@
 # cowtent-core
 
 **cowtent** = cow + tent = content, the platform of an outdoor blog. Markdown posts with photos, a gallery,
-facts (distance, ascent, time), checklists, a post's route.gpx on the swisstopo map with its points and photos, tags and filters, themes, an RSS feed,
+facts (distance, ascent, time), checklists, a post's routes on OpenStreetMap, in 3D too, with their points and photos, tags and filters, themes, an RSS feed,
 prerendered to a static site. Ember 7 (compatless) on Vite, WarpDrive,
 Tailwind CSS 4.
 
@@ -88,8 +88,8 @@ folder (`dist`), and a change reaches every blog with its next build
 - The Content-Security-Policy is a `<meta>` in every page, with the
   hashes of the page's own inline scripts: every host applies it, GitHub
   Pages too.
-- `dist/_headers` caches the fingerprinted assets forever and lets the
-  swisstopo map load a GPX; Netlify and Cloudflare read it.
+- `dist/_headers` caches the fingerprinted assets forever and lets other
+  sites load a GPX; Netlify and Cloudflare read it.
 
 A blog's `package.json` builds with `pnpm update cowtent-core && cowtent
 build`, so that a host that keeps `node_modules` between builds still

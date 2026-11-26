@@ -11,6 +11,7 @@ import assert from 'node:assert/strict';
 
 import { readAll } from '../../lib/content.mjs';
 import { photosOf } from '../../lib/cover.mjs';
+import { routesOf } from '../../lib/route.mjs';
 import { readSite } from '../../lib/site.mjs';
 
 const root = resolve(process.env.BLOG_CONTENT ?? '.');
@@ -145,42 +146,36 @@ test("the stylesheet has Frontile's classes, for the mobile menu", () => {
   }
 });
 
-test('every route map loads a GPX of the site, by its whole URL', () => {
-  const origin = new URL(site.host).origin;
-  const maps = posts.flatMap(({ id }) => [
-    ...page(`/${id}`).matchAll(/layers=GPX%7C([^"&]+)/g),
-  ]);
+test('every map is OpenStreetMap, worldwide: no swisstopo left', () => {
+  const pages = posts.map(({ id }) => page(`/${id}`)).join('');
 
-  for (const [, url] of maps) {
-    assert.ok(url.startsWith(`${origin}${site.base}`), `${url} is on the site`);
-    assert.ok(
-      existsSync(join(dist, url.slice(`${origin}${site.base}`.length))),
-      `${url} is in the build`,
-    );
-  }
+  assert.ok(
+    pages.includes('https://www.openstreetmap.org/#map='),
+    'the routes link to openstreetmap.org',
+  );
+  assert.doesNotMatch(pages, /geo\.admin\.ch|swisstopo/);
 });
 
-test("a post's route.gpx is its map, and linked in the feed", () => {
+test("a post's routes are its map, and each linked in the feed", () => {
   const rss = readFileSync(join(dist, 'rss.xml'), 'utf8');
+  let routes = 0;
 
   for (const post of posts) {
-    const own = existsSync(join(dirname(post.path), 'route.gpx'));
+    const own = routesOf(dirname(post.path));
 
+    routes += own.length;
     assert.equal(
       page(`/${post.id}`).includes('data-test-route'),
-      own,
-      `${post.id}: a map only with route.gpx`,
+      own.length > 0,
+      `${post.id}: a map only with routes`,
     );
   }
 
-  const routes = posts.filter((post) =>
-    existsSync(join(dirname(post.path), 'route.gpx')),
-  );
-
+  assert.ok(routes > 1, 'the fixtures have routes');
   assert.equal(
-    rss.match(/\/route-[\w-]+\.gpx" download/g)?.length ?? 0,
-    routes.length,
-    'every route.gpx in the feed',
+    rss.match(/\/\d*-?route-[\w-]+\.gpx" download/g)?.length ?? 0,
+    routes,
+    'every route in the feed',
   );
 });
 

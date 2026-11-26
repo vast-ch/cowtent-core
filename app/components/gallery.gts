@@ -1,6 +1,7 @@
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { action } from '@ember/object';
+import { htmlSafe } from '@ember/template';
 import { service } from '@ember/service';
 import Component from '@glimmer/component';
 
@@ -9,6 +10,7 @@ import { ResponsiveImage } from '@responsive-image/ember';
 import { t } from 'ember-intl';
 
 import { largestUrl, srcsetOf } from '../content/photo.ts';
+import { routeClasses } from '../content/route-colours.ts';
 import { LIGHTBOX_BUTTON, Lightbox } from './lightbox.gts';
 
 import type { GalleryPhoto } from '../content/gallery.ts';
@@ -25,17 +27,32 @@ const PIN_PATH =
  */
 const ARROW = `${LIGHTBOX_BUTTON} absolute top-1/2 -translate-y-1/2 bg-slate-950/55 p-2.5 backdrop-blur-sm sm:bg-transparent sm:p-3 sm:backdrop-blur-none`;
 
+/*
+ * Justified rows, read left to right in the gallery's order: each photo
+ * as wide as its shape makes it at the row's height (--row), then all of
+ * a row grown alike to its full width, so a row is one height. The last
+ * row stays as it is (the filler after it takes what's left).
+ */
+const ratioOf = (photo: GalleryPhoto['photo']) =>
+  htmlSafe(`--ratio: ${(photo.aspectRatio ?? 1.5).toFixed(3)}`);
+
+// With several routes, a ring in the colour of the route it was taken on
+const ringOf = (route: number | null, byRoute?: boolean) =>
+  byRoute && route !== null ? `ring-2 ${routeClasses(route).ring}` : '';
+
 /**
  * The photos of a post at the end of the article, its cover first, then
- * its gallery folder's (lib/cover.mjs): a masonry grid of thumbnails, each
+ * its gallery folder's (lib/cover.mjs): rows of thumbnails in their order, each
  * a link to the full photo, which opens in a full-screen lightbox instead, as does a photo's pin on the route's map. The arrows or
  * ← → change the photo; Esc, the close button or a click beside the
  * photo closes it. With a route map (`@onMap`), a photo that knows where
  * it was taken has a button in the full-screen view that shows it there,
- * in the map's lightbox (app/content/route-map.ts).
+ * in the map's lightbox (app/content/route-map.ts). With several routes
+ * (`@byRoute`), each photo has a ring in the colour of the one it was
+ * taken on.
  */
 export class Gallery extends Component<{
-  Args: { photos: GalleryPhoto[]; onMap?: boolean };
+  Args: { photos: GalleryPhoto[]; onMap?: boolean; byRoute?: boolean };
 }> {
   @service declare postView: PostViewService;
 
@@ -57,8 +74,13 @@ export class Gallery extends Component<{
     return this.args.photos.length > 1;
   }
 
+  /** Where it was taken, or else where on its route it was then */
+  get itemPlace() {
+    return this.item?.position ?? this.item?.along ?? null;
+  }
+
   get itemOnMap() {
-    return Boolean(this.args.onMap && this.item?.position);
+    return Boolean(this.args.onMap && this.itemPlace);
   }
 
   @action open(index: number, event: MouseEvent) {
@@ -80,7 +102,7 @@ export class Gallery extends Component<{
     if (this.current !== null && this.item) {
       this.postView.showMap({
         index: this.current,
-        position: this.item.position,
+        position: this.itemPlace,
       });
     }
   }
@@ -102,23 +124,30 @@ export class Gallery extends Component<{
         {{t "post.gallery.heading"}}
       </h2>
 
-      <ul class="mt-6 columns-2 gap-4 sm:columns-3" role="list">
+      <ul
+        class="mt-6 flex flex-wrap gap-2 [--row:7rem] after:flex-[999_1_0%] after:content-[''] sm:gap-3 sm:[--row:10rem]"
+        role="list"
+      >
         {{#each @photos as |item index|}}
-          <li class="mb-4 break-inside-avoid">
+          <li
+            class="[flex:var(--ratio)_1_calc(var(--ratio)*var(--row))]"
+            style={{ratioOf item.photo}}
+          >
             <a
               href={{largestUrl item.photo}}
-              class="group block overflow-hidden rounded-xl shadow-md shadow-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-colour-1-600"
+              class="group block overflow-hidden rounded-xl shadow-md shadow-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-colour-1-600
+                {{ringOf item.route @byRoute}}"
               title={{item.caption}}
               data-test-gallery-photo
               {{on "click" (fn this.open index)}}
             >
               <ResponsiveImage
                 @src={{item.photo}}
-                @sizes="(min-width: 768px) 14rem, 50vw"
+                @sizes="(min-width: 768px) 24rem, 60vw"
                 alt={{item.caption}}
                 loading="lazy"
                 decoding="async"
-                class="transition duration-300 group-hover:scale-105"
+                class="block h-auto w-full transition duration-300 group-hover:scale-105"
               />
             </a>
           </li>

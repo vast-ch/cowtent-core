@@ -1,24 +1,25 @@
 import { byFolder } from './by-folder.ts';
 
 export interface PostRoute {
-  /** [lat, lon] of the track, for the map (lib/route.mjs) */
-  track: [number, number][];
+  /** [lat, lon, elevation?] of the track, for the map (lib/route.mjs) */
+  track: [number, number, number?][];
   /** The file's URL, to download it */
   gpx: string;
-  /** The route on map.geo.admin.ch */
+  /** Where the route is on openstreetmap.org */
   map: string;
 }
 
 /**
- * A post's route.gpx (lib/route.mjs), an export of its HTML module like
- * the gallery (app/content/gallery.ts)
+ * A post's routes, route.gpx or 01 - route.gpx, 02 - route.gpx, …
+ * (lib/route.mjs), an export of its HTML module like the gallery
+ * (app/content/gallery.ts)
  */
 const ROUTES = byFolder(
-  import.meta.glob<PostRoute | undefined>('@content/posts/*/index.md', {
-    import: 'route',
+  import.meta.glob<PostRoute[]>('@content/posts/*/index.md', {
+    import: 'routes',
   }),
 );
 
-export async function routeOf(id: string): Promise<PostRoute | undefined> {
-  return await ROUTES.get(id)?.();
+export async function routesOf(id: string): Promise<PostRoute[]> {
+  return (await ROUTES.get(id)?.()) ?? [];
 }

@@ -1,7 +1,8 @@
 import { waitForPromise } from '@ember/test-waiters';
 import { isTesting } from '@embroider/macros';
 
-import { terrainSource } from './route-map-3d.ts';
+import { routeColour } from './route-colours.ts';
+import { TERRAIN_SOURCE } from './route-map-3d.ts';
 import {
   distanceAlong,
   profileChart,
@@ -9,6 +10,8 @@ import {
   photoPin,
   walkerPin,
 } from './route-profile.ts';
+
+import type { Profile } from './route-profile.ts';
 
 import type {
   IControl,
@@ -20,14 +23,12 @@ import type { GalleryPhoto } from './gallery.ts';
 import type { Point } from './schemas.ts';
 
 /**
- * swisstopo's map in Web Mercator, free to use with its name on it
- * (https://www.geo.admin.ch/en/general-terms-of-use-fsdi); only Switzerland
- * and its borders
+ * OpenStreetMap in the Swiss style, from OSM Switzerland's tile server:
+ * the whole world, without a key; the same map as winds.mobi's
  */
-export const TILES =
-  'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg';
+export const TILES = 'https://tile.osm.ch/switzerland/{z}/{x}/{y}.png';
 export const ATTRIBUTION =
-  '<a href="https://www.swisstopo.admin.ch/" target="_blank" rel="noopener">© swisstopo</a>';
+  '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors';
 
 /** The names of the map's switches and buttons, in the blog's language */
 export interface LayerLabels {
@@ -45,6 +46,8 @@ export interface LayerLabels {
   toEnd: string;
   climbed: string;
   toClimb: string;
+  zoomIn: string;
+  zoomOut: string;
 }
 
 export type LayerName = 'track' | 'photos' | 'points' | 'profile';
@@ -63,7 +66,7 @@ export interface MapState {
   /** The photo ringed, by its place in the gallery */
   shown?: number;
   hidden: LayerName[];
-  /** Tilted is 3D, over swisstopo's terrain; flat without */
+  /** Tilted is 3D, over the terrain (route-map-3d.ts); flat without */
   pitch?: number;
   bearing?: number;
 }
@@ -106,11 +109,14 @@ export interface Pins {
 /** How tilted the 3D button makes the map */
 const PITCH = 60;
 
-/** Around the route when the whole of it is shown */
+/**
+ * Around the route when the whole of it is shown; at the bottom, the
+ * altitude profile's height on top (fitPadding)
+ */
 const PADDING = 24;
 
-// rose-600 and stone-900, as the rest of the blog
-const TRACK_COLOUR = '#e11d48';
+// stone-900, as the rest of the blog; the routes are in the theme's
+// colours (app/content/route-colours.ts)
 const POINT_RIM = '#1c1917';
 
 const EXPAND =
@@ -175,12 +181,13 @@ const visibility = (hidden: LayerName[], name: LayerName) =>
   hidden.includes(name) ? 'none' : 'visible';
 
 /**
- * The route of a post on swisstopo's map, in the place of the link to it
- * that lib/route.mjs leaves in a `.route-map`: the track and the points of
+ * The routes of a post on OpenStreetMap, in the place of the link to it
+ * that lib/route.mjs leaves in a `.route-map` (`data-tracks`, or one
+ * `data-track`), each in its colour: the tracks and the points of
  * the facts with a latitude and longitude as layers of the map, every
  * photo of the gallery that knows where it was taken as a small round
  * photo (a marker, for its HTML). Tilted (the 3D button, or dragged), it
- * stands on swisstopo's terrain (app/content/route-map-3d.ts). It shows
+ * stands on the terrain (app/content/route-map-3d.ts). It shows
  * the `state` it's given, and tells `on` what's done to it: moved,
  * turned, switched, a photo clicked, the button to enlarge it. MapLibre
  * only loads on a page with a route, in the browser, when the map is
@@ -198,14 +205,16 @@ export async function routeMap(
     on = {},
   }: Pins,
 ): Promise<RouteMap> {
-  // [lat, lng, elevation?] (lib/route.mjs)
-  const track = JSON.parse(container.dataset['track'] ?? '[]') as [
-    number,
-    number,
-    number?,
-  ][];
+  // [lat, lng, elevation?] of each route (lib/route.mjs)
+  type Track = [number, number, number?][];
 
-  if (!track.length) return NONE;
+  const tracks = (
+    container.dataset['tracks']
+      ? (JSON.parse(container.dataset['tracks']) as Track[])
+      : [JSON.parse(container.dataset['track'] ?? '[]') as Track]
+  ).filter((track) => track.length > 0);
+
+  if (!tracks.length) return NONE;
 
   if (!eager) await nearView(container);
 
@@ -232,14 +241,39 @@ export async function routeMap(
     (point): point is Point & { latitude: number; longitude: number } =>
       point.latitude !== undefined && point.longitude !== undefined,
   );
-  const placed = photos.flatMap(({ photo, caption, position }, index) =>
-    position ? [{ photo, caption, position: lngLat(position), index }] : [],
+  // Where it was taken, or else where on its route it was at that time
+  const placed = photos.flatMap(
+    ({ photo, caption, position, route, along }, index) => {
+      const at = position ?? along;
+
+      return at
+        ? [
+            {
+              photo,
+              caption,
+              position: lngLat(at),
+              along: along ? lngLat(along) : undefined,
+              route,
+              index,
+            },
+          ]
+        : [];
+    },
   );
 
-  // The whole route: its track, its points and its photos
+  // The whole of it: the tracks, the points and the photos; and each
+  // route on its own, for the profile's zoom
   const bounds = new maplibregl.LngLatBounds();
+  const routeBounds = tracks.map((track) => {
+    const each = new maplibregl.LngLatBounds();
 
-  for (const position of track) bounds.extend(lngLat(position));
+    for (const position of track) each.extend(lngLat(position));
+
+    return each;
+  });
+
+  for (const track of tracks)
+    for (const position of track) bounds.extend(lngLat(position));
   for (const { longitude, latitude } of located)
     bounds.extend([longitude, latitude]);
   for (const { position } of placed) bounds.extend(position);
@@ -264,22 +298,26 @@ export async function routeMap(
       style: {
         version: 8,
         sources: {
-          swisstopo: {
+          osm: {
             type: 'raster',
             tiles: [TILES],
             tileSize: 256,
-            maxzoom: 18,
+            maxzoom: 19,
             attribution: ATTRIBUTION,
           },
+          terrain: TERRAIN_SOURCE,
           track: {
             type: 'geojson',
             data: {
-              type: 'Feature',
-              properties: {},
-              geometry: {
-                type: 'LineString',
-                coordinates: track.map(lngLat),
-              },
+              type: 'FeatureCollection',
+              features: tracks.map((track, index) => ({
+                type: 'Feature',
+                properties: { colour: routeColour(index) },
+                geometry: {
+                  type: 'LineString',
+                  coordinates: track.map(lngLat),
+                },
+              })),
             },
           },
           points: {
@@ -303,7 +341,7 @@ export async function routeMap(
           },
         },
         layers: [
-          { id: 'swisstopo', type: 'raster', source: 'swisstopo' },
+          { id: 'osm', type: 'raster', source: 'osm' },
           {
             id: 'track',
             type: 'line',
@@ -313,7 +351,7 @@ export async function routeMap(
               'line-join': 'round',
               visibility: visibility(hidden, 'track'),
             },
-            paint: { 'line-color': TRACK_COLOUR, 'line-width': 4 },
+            paint: { 'line-color': ['get', 'colour'], 'line-width': 4 },
           },
           {
             id: 'points',
@@ -347,7 +385,7 @@ export async function routeMap(
       attributionControl: { compact: true },
     });
   } catch {
-    // No WebGL: the link to the route on map.geo.admin.ch stays
+    // No WebGL: the link to the route on openstreetmap.org stays
     container.replaceChildren(...fallback);
 
     return NONE;
@@ -384,7 +422,7 @@ export async function routeMap(
   // A photo in a bubble on a pin, the pin's tip where it was taken, so the
   // photo doesn't hide the place; smaller on a phone, ringed while it's
   // the one shown. Upright in 3D too, standing on the terrain.
-  const size = window.matchMedia('(min-width: 640px)').matches ? 44 : 30;
+  const size = window.matchMedia('(min-width: 640px)').matches ? 31 : 21;
   const pins = new Map<number, { pin: HTMLElement; marker: Marker }>();
 
   for (const { photo, caption, position, index } of placed) {
@@ -406,29 +444,7 @@ export async function routeMap(
 
   let current = state;
 
-  // On its own, top right where a map's full screen button is: enlarge,
-  // only out of the lightbox
   let enlargeBox: HTMLElement | undefined;
-
-  if (labels && on.enlarge) {
-    map.addControl(
-      control((box) => {
-        // flex! over MapLibre's own button styles
-        const enlarge = button(
-          'route-enlarge flex! items-center justify-center text-stone-800 [&_svg]:size-4',
-          EXPAND,
-        );
-
-        enlargeBox = box;
-
-        enlarge.title = labels.enlarge;
-        enlarge.setAttribute('aria-label', labels.enlarge);
-        enlarge.addEventListener('click', () => on.enlarge?.());
-        box.append(enlarge);
-      }),
-      'top-right',
-    );
-  }
 
   // Under the zoom and the compass: 3D, or flat again
   let threeD: HTMLButtonElement | undefined;
@@ -449,9 +465,13 @@ export async function routeMap(
     );
   }
 
-  // Along its bottom, the altitude profile, when the track has elevations;
-  // a walker on the map where it's hovered, or walked along when played
-  const profile = labels ? profileOf(track) : undefined;
+  // Along its bottom, the altitude profile, when the tracks have
+  // elevations; a walker on the map where it's hovered, or walked along
+  // when played
+  const profiles = labels ? tracks.map(profileOf) : [];
+  const hasProfile =
+    profiles.length > 0 &&
+    profiles.every((profile): profile is Profile => profile !== undefined);
   const locale = document.documentElement.lang || undefined;
   const walker = walkerPin();
 
@@ -474,23 +494,40 @@ export async function routeMap(
   };
 
   const chart =
-    profile && labels
+    hasProfile && labels
       ? profileChart(
-          profile,
-          placed.flatMap(({ photo, caption, position, index }) => {
-            const distance = distanceAlong(profile, position);
+          profiles,
+          placed.flatMap(
+            ({ photo, caption, position, along, route, index }) => {
+              // On its route where it was at that time, or else where it's
+              // close to one
+              const candidates =
+                route !== null && route < profiles.length
+                  ? [route]
+                  : profiles.map((_, each) => each);
 
-            return distance === undefined
-              ? []
-              : [
-                  {
-                    index,
-                    caption,
-                    distance,
-                    src: photo.imageUrlFor(160, 'webp') ?? '',
-                  },
-                ];
-          }),
+              for (const each of candidates) {
+                const distance = distanceAlong(
+                  profiles[each]!,
+                  (each === route && along) || position,
+                );
+
+                if (distance !== undefined) {
+                  return [
+                    {
+                      index,
+                      caption,
+                      route: each,
+                      distance,
+                      src: photo.imageUrlFor(160, 'webp') ?? '',
+                    },
+                  ];
+                }
+              }
+
+              return [];
+            },
+          ),
           labels,
           {
             at: (point, walking) => {
@@ -505,6 +542,18 @@ export async function routeMap(
               if (walking) follow(point.lngLat);
             },
             photo: (index) => on.photo?.(index),
+            // The map shows the route zoomed in on, or all of them again
+            zoomed: (route) => {
+              map.fitBounds(
+                route === undefined ? bounds : routeBounds[route]!,
+                {
+                  padding: fitPadding(),
+                  pitch: map.getPitch(),
+                  bearing: map.getBearing(),
+                },
+                BY_HAND,
+              );
+            },
           },
           locale,
         )
@@ -513,6 +562,22 @@ export async function routeMap(
   if (chart) {
     element.append(chart.element);
     element.classList.add('has-profile');
+  }
+
+  // What the map fits a route into: clear of the profile along its bottom
+  // and with room for a photo's pin at its top, while they're shown
+  function fitPadding() {
+    const profile =
+      chart && !chart.element.hidden ? chart.element.offsetHeight + 8 : 0;
+    // The photos' pins stand up from where they were taken
+    const pin = pins.size && !current.hidden.includes('photos') ? size + 6 : 0;
+
+    return {
+      top: PADDING + pin,
+      left: PADDING,
+      right: PADDING,
+      bottom: PADDING + profile,
+    };
   }
 
   // A drag stops the walk
@@ -556,43 +621,39 @@ export async function routeMap(
     );
   }
 
+  // Top right, under the switches: enlarge, only out of the lightbox
+  if (labels && on.enlarge) {
+    map.addControl(
+      control((box) => {
+        // flex! over MapLibre's own button styles
+        const enlarge = button(
+          'route-enlarge flex! items-center justify-center text-stone-800 [&_svg]:size-4',
+          EXPAND,
+        );
+
+        enlargeBox = box;
+
+        enlarge.title = labels.enlarge;
+        enlarge.setAttribute('aria-label', labels.enlarge);
+        enlarge.addEventListener('click', () => on.enlarge?.());
+        box.append(enlarge);
+      }),
+      'top-right',
+    );
+  }
+
   // Once the style is there (its 'load'), layers and terrain can be changed,
   // whatever tiles are still coming in
   let ready = false;
 
-  // Tilted, the map stands on swisstopo's terrain; flat, it doesn't need it
-  let terrainOn = false;
+  // Tilted, the map stands on the terrain; flat, it doesn't need it
+  const terrain = (wanted: boolean) => {
+    const on = map.getTerrain() !== null;
 
-  const terrain = async (wanted: boolean) => {
-    if (wanted === terrainOn) return;
+    if (wanted === on) return;
 
-    terrainOn = wanted;
-
-    if (!wanted) {
-      map.setTerrain(null);
-      element.dataset['terrain'] = 'off';
-
-      return;
-    }
-
-    element.dataset['terrain'] = 'loading';
-
-    // Without swisstopo's terrain (offline, or it's down) it stays flat
-    const source = await waitForPromise(
-      terrainSource(maplibregl).catch(() => undefined),
-    );
-
-    if (!source) {
-      terrainOn = false;
-      element.dataset['terrain'] = 'off';
-
-      return;
-    }
-    if (!terrainOn) return;
-    if (!map.getSource('terrain')) map.addSource('terrain', source as never);
-
-    map.setTerrain({ source: 'terrain', exaggeration: 1 });
-    element.dataset['terrain'] = 'on';
+    map.setTerrain(wanted ? { source: 'terrain', exaggeration: 1 } : null);
+    element.dataset['terrain'] = wanted ? 'on' : 'off';
   };
 
   const showAngle = () => {
@@ -605,7 +666,7 @@ export async function routeMap(
       threeD.setAttribute('aria-pressed', String(tilted));
     }
 
-    if (ready) void terrain(tilted);
+    if (ready) terrain(tilted);
   };
 
   const sameView = (next: MapState) => {
@@ -661,7 +722,8 @@ export async function routeMap(
       }
     } else {
       map.jumpTo({ pitch: next.pitch ?? 0, bearing: next.bearing ?? 0 });
-      map.fitBounds(bounds, { padding: PADDING, animate: false });
+      show(next);
+      map.fitBounds(bounds, { padding: fitPadding(), animate: false });
     }
 
     show(next);
@@ -670,6 +732,10 @@ export async function routeMap(
 
   show(current);
   showAngle();
+
+  // The whole of it above the profile, now that it's there
+  if (!(center && zoom !== undefined))
+    map.fitBounds(bounds, { padding: fitPadding(), animate: false });
   map.once('load', () => {
     ready = true;
     show(current);

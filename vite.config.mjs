@@ -52,8 +52,17 @@ export default defineConfig({
   build: {
     outDir,
     emptyOutDir: true,
-    // swisstopo loads a route from its URL (lib/route.mjs): never inline one
+    // A route is a file to download (lib/route.mjs): never inline one
     assetsInlineLimit: (file) => (/\.gpx$/i.test(file) ? false : undefined),
+    // No spaces in a file's address: "01 - route.gpx" is 01-route-Bx3k.gpx
+    rolldownOptions: {
+      output: {
+        assetFileNames: ({ names }) =>
+          `assets/${(names[0] ?? 'asset')
+            .replace(/\.[^.]+$/, '')
+            .replace(/[\s-]+/g, '-')}-[hash][extname]`,
+      },
+    },
   },
   server: { fs: { allow: [import.meta.dirname, content] } },
   resolve: {

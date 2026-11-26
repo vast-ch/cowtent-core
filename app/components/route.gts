@@ -22,16 +22,17 @@ import type { Point } from '../content/schemas.ts';
 import type PostViewService from '../services/post-view.ts';
 
 interface Args {
-  route: PostRoute;
+  routes: PostRoute[];
   points?: Point[];
   photos?: GalleryPhoto[];
 }
 
 /**
- * The post's route.gpx on swisstopo's map, above the gallery: the track,
+ * The post's routes on OpenStreetMap, above the gallery, each in its
+ * colour (app/content/route-colours.ts): the tracks,
  * the points of the facts with a latitude and longitude, and the gallery's
  * photos where they were taken (app/content/route-map.ts). The link to
- * the route on map.geo.admin.ch is the map until it's drawn; the file to
+ * the route on openstreetmap.org is the map until it's drawn; the file to
  * download and that link are in the facts (app/components/facts.gts).
  *
  * It's one map: drawn once it's about to scroll into view, or at once
@@ -59,8 +60,13 @@ export class Route extends Component<{ Args: Args }> {
     };
   }
 
-  get track() {
-    return JSON.stringify(this.args.route.track);
+  get tracks() {
+    return JSON.stringify(this.args.routes.map((route) => route.track));
+  }
+
+  /** Until the map is drawn, the link to the first route on openstreetmap.org */
+  get mapLink() {
+    return this.args.routes[0]?.map;
   }
 
   get isOpen() {
@@ -126,6 +132,8 @@ export class Route extends Component<{ Args: Args }> {
         toEnd=(t "post.route.profile.to-end")
         climbed=(t "post.route.profile.climbed")
         toClimb=(t "post.route.profile.to-climb")
+        zoomIn=(t "post.route.profile.zoom-in")
+        zoomOut=(t "post.route.profile.zoom-out")
         enlarge=(t "post.route.enlarge")
         threeD=(t "post.route.three-d")
         flat=(t "post.route.flat")
@@ -145,12 +153,12 @@ export class Route extends Component<{ Args: Args }> {
         <figure class="route mt-6">
           <div
             class="route-map isolate flex aspect-[16/15] w-full items-center justify-center overflow-hidden rounded-2xl bg-stone-100 font-sans sm:aspect-[16/10]"
-            data-track={{this.track}}
+            data-tracks={{this.tracks}}
             role="region"
             aria-labelledby="route-title"
             {{this.onPage labels}}
           >
-            <a href={{@route.map}}>{{t "post.route.map"}}</a>
+            <a href={{this.mapLink}}>{{t "post.route.map"}}</a>
           </div>
         </figure>
 
@@ -165,7 +173,7 @@ export class Route extends Component<{ Args: Args }> {
             <div class="flex min-h-0 flex-1 px-4 pb-4 sm:px-16" data-beside>
               <div
                 class="route-map route-map-lightbox isolate min-h-0 w-full flex-1 overflow-hidden rounded-xl bg-stone-100 font-sans"
-                data-track={{this.track}}
+                data-tracks={{this.tracks}}
                 role="region"
                 aria-label={{t "post.route.map"}}
                 {{this.inLightbox labels}}

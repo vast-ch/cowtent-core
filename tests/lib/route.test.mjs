@@ -2,7 +2,19 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { renderFeed, renderPage } from '../../lib/markdown.mjs';
-import { lv95, mapUrl, trackOf } from '../../lib/route.mjs';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+import {
+  mapUrl,
+  nearestRoute,
+  pointAtTime,
+  routeAtTime,
+  routesOf,
+  timeSpanOf,
+  trackOf,
+} from '../../lib/route.mjs';
 
 const gpx = `<gpx><trk><trkseg>
   <trkpt lat="46.6322" lon="7.9012"/><trkpt lon="7.9922" lat="46.6511"/>
@@ -17,22 +29,16 @@ const language = {
 };
 const options = {
   resolveAsset: (url) => `/assets/${url.slice(2)}`,
-  absolute: (url) => `https://blog.example.com/assets/${url.slice(2)}`,
   readAsset: () => gpx,
   link: (id) => id,
   language,
 };
 
-test('Swiss coordinates of a point', () => {
-  assert.deepEqual(lv95(46.9466, 7.4442).map(Math.round), [2600424, 1199502]);
-});
-
-test('the map is centred on the track, as close as it fits', () => {
-  const url = mapUrl(gpx, 'https://blog.example.com/route.gpx', 'de');
-
-  assert.match(url, /^https:\/\/map\.geo\.admin\.ch\/#\/map\?lang=de&/);
-  assert.match(url, /&center=2638\d{3},1165\d{3}&z=5&/);
-  assert.match(url, /&layers=GPX%7Chttps:\/\/blog\.example\.com\/route\.gpx$/);
+test('the link is openstreetmap.org, centred on the track, as close as it fits', () => {
+  assert.equal(
+    mapUrl(gpx),
+    'https://www.openstreetmap.org/#map=13/46.6416/7.9467',
+  );
 });
 
 test('an embedded GPX is a map with a download link, a linked one a link', async () => {
@@ -43,11 +49,11 @@ test('an embedded GPX is a map with a download link, a linked one a link', async
 
   assert.match(
     page,
-    /^<figure class="route"><div class="route-map not-prose[^"]*" data-track="\[\[46\.6322,7\.9012\],\[46\.6511,7\.9922\]\]" role="region" aria-label="Up the gully"><a href="https:\/\/map\.geo\.admin\.ch\/#\/map\?[^"]+GPX%7Chttps:\/\/blog\.example\.com\/assets\/route\.gpx">Up the gully<\/a><\/div>/,
+    /^<figure class="route"><div class="route-map not-prose[^"]*" data-track="\[\[46\.6322,7\.9012\],\[46\.6511,7\.9922\]\]" role="region" aria-label="Up the gully"><a href="https:\/\/www\.openstreetmap\.org\/#map=[^"]+">Up the gully<\/a><\/div>/,
   );
   assert.match(
     page,
-    /<figcaption>Up the gully · <a href="\/assets\/route\.gpx" download>Download the GPX<\/a> · <a href="https:\/\/map\.geo\.admin\.ch\/#\/map\?[^"]+">map\.geo\.admin\.ch<\/a><\/figcaption><\/figure>/,
+    /<figcaption>Up the gully · <a href="\/assets\/route\.gpx" download>Download the GPX<\/a> · <a href="https:\/\/www\.openstreetmap\.org\/#map=[^"]+">openstreetmap\.org<\/a><\/figcaption><\/figure>/,
   );
   assert.match(
     page,
@@ -92,11 +98,86 @@ test('without words in the brackets the map is "The route"', async () => {
 test('the feed links the map instead', async () => {
   const feed = await renderFeed('![Up the gully](./route.gpx)', {
     ...options,
-    resolveAsset: options.absolute,
+    resolveAsset: (url) => `https://blog.example.com/assets/${url.slice(2)}`,
   });
 
   assert.match(
     feed,
-    /^<p><a href="https:\/\/map\.geo\.admin\.ch\/#\/map\?[^"]+">Up the gully<\/a> · <a href="https:\/\/blog\.example\.com\/assets\/route\.gpx" download>/,
+    /^<p><a href="https:\/\/www\.openstreetmap\.org\/#map=[^"]+">Up the gully<\/a> · <a href="https:\/\/blog\.example\.com\/assets\/route\.gpx" download>/,
   );
+});
+
+test("a post's routes: route.gpx, or numbered like the gallery's photos", () => {
+  const dir = mkdtempSync(join(tmpdir(), 'cowtent-routes-'));
+
+  for (const file of [
+    '02 - route.gpx',
+    '1 route.gpx',
+    '10 - route.gpx',
+    'the-gully.gpx',
+    'notes.md',
+  ])
+    writeFileSync(join(dir, file), '');
+
+  assert.deepEqual(routesOf(dir), [
+    '1 route.gpx',
+    '02 - route.gpx',
+    '10 - route.gpx',
+  ]);
+
+  const single = mkdtempSync(join(tmpdir(), 'cowtent-routes-'));
+
+  writeFileSync(join(single, 'route.gpx'), '');
+  assert.deepEqual(routesOf(single), ['route.gpx']);
+});
+
+test('a photo belongs to the route it was taken during, or the closest in time', () => {
+  const hour = 3600000;
+  const spans = [[8 * hour, 16 * hour], [32 * hour, 40 * hour], undefined];
+
+  assert.equal(routeAtTime(spans, 12 * hour), 0, 'on the way');
+  assert.equal(routeAtTime(spans, 19 * hour), 0, 'at the camp after it');
+  assert.equal(routeAtTime(spans, 30 * hour), 1, 'breakfast before the next');
+  assert.equal(routeAtTime(spans, 80 * hour), null, 'days later');
+  assert.equal(routeAtTime([undefined], 12 * hour), null, 'no times');
+  assert.deepEqual(
+    timeSpanOf(
+      '<trkpt><time>2019-04-20T09:58:54Z</time></trkpt><trkpt><time>2019-04-20T16:00:00Z</time></trkpt>',
+    ),
+    [Date.parse('2019-04-20T09:58:54Z'), Date.parse('2019-04-20T16:00:00Z')],
+  );
+  assert.equal(timeSpanOf('<trkpt lat="1" lon="2"/>'), undefined);
+});
+
+test('without times, a photo belongs to the closest route, if near', () => {
+  const tracks = [
+    [
+      [46.6, 7.9],
+      [46.61, 7.9],
+    ],
+    [
+      [46.7, 7.9],
+      [46.71, 7.9],
+    ],
+  ];
+
+  assert.equal(nearestRoute(tracks, [46.7021, 7.9]), 1);
+  assert.equal(nearestRoute(tracks, [47, 7.9]), null, 'far from both');
+});
+
+test('where on the track it was at a time', () => {
+  const timed = `<trkpt lat="46.6" lon="7.9"><time>2019-04-20T10:00:00Z</time></trkpt>
+    <trkpt lat="46.7" lon="8.1"><time>2019-04-20T12:00:00Z</time></trkpt>`;
+
+  assert.deepEqual(
+    pointAtTime(timed, Date.parse('2019-04-20T11:00:00Z')),
+    [46.65, 8],
+    'halfway between',
+  );
+  assert.deepEqual(
+    pointAtTime(timed, Date.parse('2019-04-20T19:00:00Z')),
+    [46.7, 8.1],
+    'after it: the end',
+  );
+  assert.equal(pointAtTime('<trkpt lat="1" lon="2"></trkpt>', 0), undefined);
 });

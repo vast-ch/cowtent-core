@@ -1,5 +1,33 @@
 # Changelog
 
+## v0.15.0 - 2026-11-26
+
+- **Several routes in a post**: `route.gpx`, or numbered like the
+  gallery's photos (`01 - route.gpx`, `02 - route.gpx`, …), one a day.
+  All on one map, each in its theme colour (route 1 in `colour-2`, then
+  up); `colour-1` stays the accent (play, the spot, the photo shown).
+- **One altitude profile for all of them**, end to end, each stretch in
+  its route's colour. A click on a stretch zooms the profile and the map
+  in on that route; "All the routes" goes back. Its ticks space
+  themselves out on long ones.
+- **Photos matched to their route by time**: the GPS's time, or the
+  camera's set right by the gallery's other photos, against the GPX's;
+  by place when there are no times. Each stands on the profile where it
+  was at that time, and with several routes has a ring of its route's
+  colour in the gallery.
+- **The map is OpenStreetMap, worldwide**, with the relief of the AWS
+  Terrain Tiles in 3D: the map and terrain of winds.mobi, instead of
+  swisstopo's (Switzerland only). The route's link goes to
+  openstreetmap.org; the swisstopo terrain plugins are gone.
+- The map fits a route above the profile, with room for the photos'
+  pins; its photo bubbles are smaller; the button to enlarge it is under
+  the switches.
+- **The gallery is in rows**, read left to right in its order, each photo
+  in its own shape, instead of columns (which read down).
+- The facts have one "Route" row: each route's GPX to download, with a dot
+  of its colour; no map.geo.admin.ch link.
+- Built files have no spaces in their names (`01-route-….gpx`).
+
 ## v0.14.0 - 2026-11-26
 
 - **Every theme has seven colours of its own**, `colour-1` … `colour-7`,

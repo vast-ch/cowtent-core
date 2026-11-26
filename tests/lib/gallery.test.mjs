@@ -4,7 +4,12 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { galleryOf, isGalleryPhoto, positionOf } from '../../lib/gallery.mjs';
+import {
+  exifOf,
+  galleryOf,
+  isGalleryPhoto,
+  photosTimes,
+} from '../../lib/gallery.mjs';
 
 function post(...files) {
   const dir = mkdtempSync(join(tmpdir(), 'cowtent-gallery-'));
@@ -70,11 +75,31 @@ test("a photo's GPS is where it was taken, none without", async () => {
   );
 
   assert.deepEqual(
-    await positionOf(join(photos, '01 - The first photo.jpg')),
+    (await exifOf(join(photos, '01 - The first photo.jpg'))).position,
     [46.63687, 7.9778],
   );
   assert.equal(
-    await positionOf(join(photos, 'The third photo.jpg')),
+    (await exifOf(join(photos, 'The third photo.jpg'))).position,
     undefined,
+  );
+});
+
+test("a photo's time: the GPS's, or the camera's set right by the others", () => {
+  const hour = 3600000;
+
+  assert.deepEqual(
+    photosTimes([
+      { utc: 10 * hour, local: 11 * hour },
+      { utc: 12 * hour, local: 13 * hour },
+      // No GPS: the camera's clock, an hour ahead like on the others
+      { local: 15 * hour },
+      {},
+    ]),
+    [10 * hour, 12 * hour, 14 * hour, undefined],
+  );
+  assert.deepEqual(
+    photosTimes([{ local: 15 * hour }]),
+    [undefined],
+    'nothing to tell the time zone by',
   );
 });
