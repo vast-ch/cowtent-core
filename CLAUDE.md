@@ -16,9 +16,17 @@ runs `cowtent build` (`bin/cowtent.mjs`).
 - `lib/host.mjs`: after prerendering, the CSP as a `<meta>` in every page
   (hashes of its inline scripts) and `dist/_headers`, so a blog's host
   config is only `pnpm build` and `dist`.
-- The blog's `colour:` is `--blog-colour` on :root (index.html); Tailwind's
-  `accent-*` shades are mixed from it (`app/styles/app.css`). Use `accent-*`,
-  never a fixed colour, for anything that should follow the blog's colour.
+- Every theme has seven colours, `colour-1` … `colour-7`, each in
+  Tailwind's shades 50 … 950 (`bg-colour-3-200`), in
+  `app/themes/<theme>/colours.css`: alps's an `@theme` (the classes),
+  the others' plain variables under their layout's `data-theme`. No blog
+  colour: colour-1 is links, buttons and highlights. Use them, never a
+  fixed colour, for the theme's colours; all seven tell things apart (a
+  route per day). Night's run the other way (50 the darkest).
+  A blog can put its own over them, `colours:` in site.yaml (a list of
+  up to seven, the first colour-1): `lib/colours.mjs` makes their shades,
+  served as `virtual:blog-colours.css`, bundled
+  after `app.css` (`app/app.ts`).
 - A post's map and its lightboxes (`app/components/lightbox.gts`, on
   Frontile's Overlay) show what the post's query params say
   (`app/services/post-view.ts`); the maps only show state and report

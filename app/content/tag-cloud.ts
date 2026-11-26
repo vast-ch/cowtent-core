@@ -17,8 +17,8 @@ const SIZES = ['text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl'];
 // sidebar, and as a chip on a post (the classes in full, for Tailwind)
 const COLOURS = [
   {
-    text: 'text-accent-600',
-    chip: 'bg-accent-50 text-accent-800 has-[a:hover]:bg-accent-100',
+    text: 'text-colour-1-600',
+    chip: 'bg-colour-1-50 text-colour-1-800 has-[a:hover]:bg-colour-1-100',
   },
   {
     text: 'text-sky-600',

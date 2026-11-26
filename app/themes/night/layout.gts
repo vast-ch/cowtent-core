@@ -16,10 +16,9 @@ import type { TOC } from '@ember/component/template-only';
 
 /*
  * After dark, on <html> while this layout is on the page: the greys turned
- * around (light text on dark ground), and its own colour, moonlight, rather
- * than the blog's (a warm colour mixed into the dark turns brown), with
- * dark text on it. Amber is the moon's pale yellow, the stars of a rating
- * too; the tags' chips (app/content/tag-cloud.ts) a hint of their colour.
+ * around (light text on dark ground); its seven colours are colours.css.
+ * Amber is the moon's pale yellow, the stars of a rating too; the tags'
+ * chips (app/content/tag-cloud.ts) a hint of their colour.
  */
 const DARK = [
   '[:root:has(&)]:scheme-dark',
@@ -36,15 +35,6 @@ const DARK = [
   '[:root:has(&)]:[--color-stone-900:#f1f4f8]',
   '[:root:has(&)]:[--color-slate-700:#c7cfdb]',
   '[:root:has(&)]:[--color-slate-900:#f1f4f8]',
-  '[:root:has(&)]:[--color-accent-50:color-mix(in_oklab,#818cf8_14%,#0b1120)]',
-  '[:root:has(&)]:[--color-accent-100:color-mix(in_oklab,#818cf8_24%,#0b1120)]',
-  '[:root:has(&)]:[--color-accent-200:color-mix(in_oklab,#818cf8_40%,#0b1120)]',
-  '[:root:has(&)]:[--color-accent-300:color-mix(in_oklab,#818cf8_60%,#0b1120)]',
-  '[:root:has(&)]:[--color-accent-600:#818cf8]',
-  '[:root:has(&)]:[--color-accent-700:color-mix(in_oklab,#818cf8_70%,white)]',
-  '[:root:has(&)]:[--color-accent-800:color-mix(in_oklab,#818cf8_55%,white)]',
-  '[:root:has(&)]:[--color-accent-900:color-mix(in_oklab,#818cf8_40%,white)]',
-  '[:root:has(&)]:[--color-on-accent:#0b1120]',
   '[:root:has(&)]:[--color-amber-600:#fcd34d]',
   '[:root:has(&)]:[--color-sky-50:color-mix(in_oklab,var(--color-sky-600)_8%,#1a2233)]',
   '[:root:has(&)]:[--color-sky-100:color-mix(in_oklab,var(--color-sky-600)_16%,#1a2233)]',
@@ -93,6 +83,7 @@ export const Layout: TOC<{
   Blocks: { default: [] };
 }> = <template>
   <div
+    data-theme="night"
     class="flex min-h-full w-full flex-col bg-stone-50 {{DARK}} {{PROSE}}"
     ...attributes
   >

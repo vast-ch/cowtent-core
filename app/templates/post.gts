@@ -42,7 +42,7 @@ const Neighbour: TOC<{
     @route="post"
     @model={{@post.id}}
     ...attributes
-    class="block rounded-2xl bg-white p-5 shadow-sm ring-1 ring-stone-200 hover:ring-accent-300"
+    class="block rounded-2xl bg-white p-5 shadow-sm ring-1 ring-stone-200 hover:ring-colour-1-300"
   >
     <span class="text-xs font-medium tracking-wide text-stone-500 uppercase">
       {{@label}}

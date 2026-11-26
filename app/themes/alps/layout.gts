@@ -61,6 +61,7 @@ export const Layout: TOC<{
   Blocks: { default: [] };
 }> = <template>
   <div
+    data-theme="alps"
     class="flex min-h-full w-full flex-col bg-stone-50 {{ROOT}}"
     ...attributes
   >
@@ -116,8 +117,14 @@ export const Layout: TOC<{
           >
             <defs>
               <linearGradient id="alps-peaks">
-                <stop offset="0" class="[stop-color:var(--color-accent-100)]" />
-                <stop offset="1" class="[stop-color:var(--color-accent-200)]" />
+                <stop
+                  offset="0"
+                  class="[stop-color:var(--color-colour-1-100)]"
+                />
+                <stop
+                  offset="1"
+                  class="[stop-color:var(--color-colour-1-200)]"
+                />
               </linearGradient>
             </defs>
             <path d={{PEAKS}} fill="url(#alps-peaks)" />

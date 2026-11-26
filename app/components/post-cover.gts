@@ -10,7 +10,7 @@ import type { Post } from '../content/schemas.ts';
 /**
  * A post's cover on the front page, a link to the post that screen readers
  * skip (the title is the same link). Without a cover, @else: a stripe in
- * the blog's colour, or nothing.
+ * colour-1, or nothing.
  */
 export const PostCover: TOC<{
   Element: HTMLAnchorElement;

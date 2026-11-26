@@ -82,3 +82,14 @@ test("the address is site.yaml's url:, else the one the host gave the site", () 
     assert.equal(site('').host, 'http://localhost:4200', 'URL only on Netlify');
   });
 });
+
+test("a blog's own colours over the theme's: a list of at most seven", () => {
+  assert.deepEqual(site('').colours, []);
+  assert.deepEqual(site('colours: ["#ff1493", "#00E5FF"]').colours, [
+    '#ff1493',
+    '#00E5FF',
+  ]);
+  assert.throws(() => site('colours: ["pink"]'), /colours must be/);
+  assert.throws(() => site(`colours: [${'"#000000",'.repeat(8)}]`), /seven/);
+  assert.throws(() => site('colour: "#ff1493"'), /colours:/);
+});

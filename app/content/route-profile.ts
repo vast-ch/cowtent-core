@@ -222,7 +222,7 @@ const el = <K extends keyof HTMLElementTagNameMap>(
 /**
  * A photo where it was taken: a round bubble on a pin, the pin's tip on the
  * place, so the photo doesn't hide it; nothing happens to it under the
- * mouse. Ringed in the blog's colour while it's the one shown (`is-shown`).
+ * mouse. Ringed in colour-1 while it's the one shown (`is-shown`).
  */
 export function photoPin(
   src: string,
@@ -241,11 +241,11 @@ export function photoPin(
   );
   const img = el(
     'img',
-    'aspect-square w-full rounded-full object-cover ring-2 ring-white group-[.is-shown]/pin:ring-4 group-[.is-shown]/pin:ring-accent-600',
+    'aspect-square w-full rounded-full object-cover ring-2 ring-white group-[.is-shown]/pin:ring-4 group-[.is-shown]/pin:ring-colour-1-600',
   );
   const tip = el(
     'span',
-    `route-tip -mt-px h-0 w-0 border-x-transparent border-t-white group-[.is-shown]/pin:border-t-accent-600 ${
+    `route-tip -mt-px h-0 w-0 border-x-transparent border-t-white group-[.is-shown]/pin:border-t-colour-1-600 ${
       on === 'map'
         ? 'border-x-[6px] border-t-[9px]'
         : 'border-x-[4px] border-t-[6px] sm:border-x-[5px] sm:border-t-[8px]'
@@ -274,7 +274,7 @@ export function walkerPin(): HTMLButtonElement {
   bubble.innerHTML = WALKER;
   bubble.firstElementChild!.setAttribute(
     'class',
-    'aspect-square w-full rounded-full bg-accent-600 p-1 text-white ring-2 ring-white',
+    'aspect-square w-full rounded-full bg-colour-1-600 p-1 text-white ring-2 ring-white',
   );
   bubble.append(
     el(
@@ -333,7 +333,7 @@ export function profileChart(
 
   const play = el(
     'button',
-    'route-play flex size-9 shrink-0 cursor-pointer items-center justify-center self-center rounded-full text-accent-700 hover:bg-accent-50 focus-visible:outline-2 focus-visible:outline-accent-600 [&_svg]:size-6',
+    'route-play flex size-9 shrink-0 cursor-pointer items-center justify-center self-center rounded-full text-colour-1-700 hover:bg-colour-1-50 focus-visible:outline-2 focus-visible:outline-colour-1-600 [&_svg]:size-6',
   );
   play.type = 'button';
 
@@ -352,7 +352,7 @@ export function profileChart(
   chart.innerHTML = `
     <svg class="route-relief absolute inset-0 size-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
       <path class="fill-stone-400/45" d="${line}L100 100L0 100Z"/>
-      <path class="route-relief-walked fill-accent-600 [fill-opacity:0.3]" style="clip-path: inset(0 100% 0 0)" d="${line}L100 100L0 100Z"/>
+      <path class="route-relief-walked fill-colour-1-600 [fill-opacity:0.3]" style="clip-path: inset(0 100% 0 0)" d="${line}L100 100L0 100Z"/>
       <path class="fill-none stroke-stone-700 [stroke-width:1.5] [vector-effect:non-scaling-stroke]" d="${line}"/>
     </svg>`;
 
@@ -374,7 +374,7 @@ export function profileChart(
   );
   const dot = el(
     'span',
-    'pointer-events-none absolute z-[3] hidden size-3.5 -translate-1/2 rounded-full bg-accent-600 ring-2 ring-white group-[.is-at]/profile:block',
+    'pointer-events-none absolute z-[3] hidden size-3.5 -translate-1/2 rounded-full bg-colour-1-600 ring-2 ring-white group-[.is-at]/profile:block',
   );
 
   // The numbers at the spot, above the strip over it: how high, how far from

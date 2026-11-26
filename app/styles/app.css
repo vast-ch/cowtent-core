@@ -8,6 +8,16 @@
 @import "@fontsource-variable/rokkitt";
 @import "@fontsource-variable/bitter";
 
+/*
+ * Every theme's seven colours, colour-1 … colour-7, in Tailwind's shades
+ * 50 … 950 (bg-colour-3-200): alps's in an @theme, so the classes exist;
+ * the others' in a block of their own, on while their layout is on the page
+ * (data-theme). The first is the colour of links, buttons and highlights.
+ */
+@import "../themes/alps/colours.css";
+@import "../themes/basecamp/colours.css";
+@import "../themes/night/colours.css";
+
 /* Frontile: the drawer of the mobile menu (app/components/mobile-nav.gts) */
 @import "@frontile/theme";
 
@@ -21,19 +31,7 @@
 @source "package:frontile";
 @source "package:@frontile/theme";
 
-/*
- * The blog's colour (`colour:` in site.yaml, set on :root in index.html) in
- * the shades the templates use as accent-50 … accent-900
- */
 @theme {
-  --color-accent-50: color-mix(in oklab, var(--blog-colour) 7%, white);
-  --color-accent-100: color-mix(in oklab, var(--blog-colour) 15%, white);
-  --color-accent-200: color-mix(in oklab, var(--blog-colour) 30%, white);
-  --color-accent-300: color-mix(in oklab, var(--blog-colour) 50%, white);
-  --color-accent-600: var(--blog-colour);
-  --color-accent-700: color-mix(in oklab, var(--blog-colour) 85%, black);
-  --color-accent-800: color-mix(in oklab, var(--blog-colour) 70%, black);
-  --color-accent-900: color-mix(in oklab, var(--blog-colour) 55%, black);
   --font-display: "Fraunces Variable", ui-serif, georgia, serif;
   --font-sans:
     "Inter Variable", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
@@ -41,7 +39,7 @@
 }
 
 /*
- * Frontile in the theme's colours and fonts, the blog's colour as its own,
+ * Frontile in the theme's colours and fonts, colour-1 as its own,
  * so the menu on a phone looks like the page (its own sit on :root and
  * .light)
  */
@@ -53,30 +51,30 @@ html:root {
   --color-on-surface-drawer: var(--color-stone-900);
   --color-surface-modal: var(--color-white);
   --color-on-surface-modal: var(--color-stone-900);
-  --color-primary: var(--color-accent-600);
-  --color-on-primary: var(--color-on-accent, white);
-  --color-primary-subtle: var(--color-accent-50);
-  --color-on-primary-subtle: var(--color-accent-800);
-  --color-primary-soft: var(--color-accent-100);
-  --color-on-primary-soft: var(--color-accent-800);
-  --color-primary-muted: var(--color-accent-200);
-  --color-on-primary-muted: var(--color-accent-900);
-  --color-primary-mild: var(--color-accent-300);
-  --color-on-primary-mild: var(--color-accent-900);
-  --color-primary-firm: var(--color-accent-700);
-  --color-on-primary-firm: var(--color-on-accent, white);
-  --color-primary-strong: var(--color-accent-800);
+  --color-primary: var(--color-colour-1-600);
+  --color-on-primary: var(--color-on-colour-1, white);
+  --color-primary-subtle: var(--color-colour-1-50);
+  --color-on-primary-subtle: var(--color-colour-1-800);
+  --color-primary-soft: var(--color-colour-1-100);
+  --color-on-primary-soft: var(--color-colour-1-800);
+  --color-primary-muted: var(--color-colour-1-200);
+  --color-on-primary-muted: var(--color-colour-1-900);
+  --color-primary-mild: var(--color-colour-1-300);
+  --color-on-primary-mild: var(--color-colour-1-900);
+  --color-primary-firm: var(--color-colour-1-700);
+  --color-on-primary-firm: var(--color-on-colour-1, white);
+  --color-primary-strong: var(--color-colour-1-800);
   --color-on-primary-strong: white;
-  --color-primary-bolder: var(--color-accent-900);
+  --color-primary-bolder: var(--color-colour-1-900);
   --color-on-primary-bolder: white;
 }
 
 /*
  * A section heading: "The facts", "Photo gallery". A serif
- * title over a thin rule in the blog's colour.
+ * title over a thin rule in the theme's colour-1.
  */
 @utility section-heading {
-  @apply scroll-mt-8 border-b-2 border-accent-200 pb-2 font-display text-2xl font-semibold text-stone-900;
+  @apply scroll-mt-8 border-b-2 border-colour-1-200 pb-2 font-display text-2xl font-semibold text-stone-900;
 }
 
 /*

@@ -86,7 +86,7 @@ export class MobileNav extends Component<{ Element: HTMLDivElement }> {
         </svg>
         {{#if this.selected.length}}
           <span
-            class="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-accent-600 text-[10px] font-bold text-white"
+            class="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-colour-1-600 text-[10px] font-bold text-white"
             aria-label={{t
               "sidebar.filters-selected"
               count=this.selected.length

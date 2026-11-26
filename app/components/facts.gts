@@ -6,7 +6,7 @@ import type { TOC } from '@ember/component/template-only';
 
 const TH = 'w-1/3 py-2 pr-4 align-top font-medium text-slate-900';
 const TD =
-  'py-2 align-top [&_a]:text-accent-700 [&_a]:underline hover:[&_a]:text-accent-900';
+  'py-2 align-top [&_a]:text-colour-1-700 [&_a]:underline hover:[&_a]:text-colour-1-900';
 import type { PostRoute } from '../content/route.ts';
 import type { Facts as FactsData } from '../content/schemas.ts';
 

@@ -481,6 +481,15 @@ module('Acceptance | blog', function (hooks) {
         'dark',
         'its colours on <html>',
       );
+      assert.strictEqual(
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--color-colour-1-600')
+          .trim(),
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--color-indigo-400')
+          .trim(),
+        'its own seven colours (app/themes/night/colours.css)',
+      );
     } finally {
       localStorage.removeItem('cowtent-theme:/');
     }

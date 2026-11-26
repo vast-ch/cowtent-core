@@ -30,31 +30,31 @@ export const Explore: TOC<{
       class="mt-4 flex flex-col gap-3 text-base/7 font-semibold text-slate-900"
     >
       <li class="flex items-center gap-2">
-        <span class="text-accent-600" aria-hidden="true">→</span>
+        <span class="text-colour-1-600" aria-hidden="true">→</span>
         {{! Without the tags too: query params are sticky, a plain link to the
             front page would bring back the last filter }}
         <LinkTo
           @route="index"
           @query={{hash tags=""}}
-          class="hover:text-accent-700"
+          class="hover:text-colour-1-700"
           data-test-all-adventures
           {{on "click" (if @onNavigate @onNavigate noop)}}
         >{{t "sidebar.all-posts"}}</LinkTo>
       </li>
       {{#each site.navigation as |item|}}
         <li class="flex items-center gap-2">
-          <span class="text-accent-600" aria-hidden="true">→</span>
+          <span class="text-colour-1-600" aria-hidden="true">→</span>
           <LinkTo
             @route={{item.route}}
             @models={{if item.id (array item.id) (array)}}
-            class="hover:text-accent-700"
+            class="hover:text-colour-1-700"
             {{on "click" (if @onNavigate @onNavigate noop)}}
           >{{item.label}}</LinkTo>
         </li>
       {{/each}}
       <li class="flex items-center gap-2">
-        <span class="text-accent-600" aria-hidden="true">→</span>
-        <a href={{RSS}} class="hover:text-accent-700">{{t
+        <span class="text-colour-1-600" aria-hidden="true">→</span>
+        <a href={{RSS}} class="hover:text-colour-1-700">{{t
             "sidebar.rss-feed"
           }}</a>
       </li>

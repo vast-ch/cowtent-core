@@ -35,7 +35,8 @@ in each theme.
 ## A blog's folder
 
 ```
-site.yaml               title, owner, colour, menu, language (lib/site.mjs)
+site.yaml               title, owner, menu, language, theme, colours
+                        (lib/site.mjs)
 languages/<code>.yaml   tag names, and any of the core's words reworded
 cover.jpg               the sidebar photo
 favicon.svg             optional, the icon of the site and the app

@@ -25,7 +25,9 @@ export const Footer: TOC<{ Element: HTMLElement }> = <template>
           <Owner />
         {{/if}}
       </p>
-      <a href={{RSS}} class="hover:text-accent-700">{{t "layout.rss-feed"}}</a>
+      <a href={{RSS}} class="hover:text-colour-1-700">{{t
+          "layout.rss-feed"
+        }}</a>
     </div>
   </footer>
 </template>;

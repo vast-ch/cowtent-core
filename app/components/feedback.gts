@@ -47,13 +47,13 @@ export const Feedback: TOC<{
   Args: { post: Post };
 }> = <template>
   <aside
-    class="flex flex-col items-center rounded-2xl bg-accent-50 px-6 py-8 text-center"
+    class="flex flex-col items-center rounded-2xl bg-colour-1-50 px-6 py-8 text-center"
     data-test-feedback
     ...attributes
   >
     <a
       href={{mailto @post}}
-      class="inline-flex items-center gap-2.5 rounded-full bg-accent-600 px-5 py-2.5 font-semibold text-white shadow-sm hover:bg-accent-700"
+      class="inline-flex items-center gap-2.5 rounded-full bg-colour-1-600 px-5 py-2.5 font-semibold text-white shadow-sm hover:bg-colour-1-700"
       data-test-feedback-link
     >
       <svg

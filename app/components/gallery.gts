@@ -107,7 +107,7 @@ export class Gallery extends Component<{
           <li class="mb-4 break-inside-avoid">
             <a
               href={{largestUrl item.photo}}
-              class="group block overflow-hidden rounded-xl shadow-md shadow-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600"
+              class="group block overflow-hidden rounded-xl shadow-md shadow-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-colour-1-600"
               title={{item.caption}}
               data-test-gallery-photo
               {{on "click" (fn this.open index)}}

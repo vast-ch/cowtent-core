@@ -1,4 +1,6 @@
 import './styles/app.css';
+// The blog's own colours, over the theme's (lib/colours.mjs)
+import 'virtual:blog-colours.css';
 import '@warp-drive/ember/install';
 
 import EmberApp from 'ember-strict-application-resolver';

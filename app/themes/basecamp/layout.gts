@@ -20,8 +20,8 @@ import type { TOC } from '@ember/component/template-only';
 /*
  * On <html> while this layout is on the page: an old camping poster.
  * Rokkitt for the headings, Bitter for the text, on paper: cream, the
- * cards a warmer white. Besides the blog's colour, the poster's own
- * mustard (sticker.ts).
+ * cards a warmer white. Its seven colours are colours.css; besides them
+ * the poster's own mustard (sticker.ts).
  */
 const ROOT = [
   "[:root:has(&)]:[--font-display:'Rokkitt_Variable',ui-serif,georgia,serif]",
@@ -34,14 +34,15 @@ const ROOT = [
 /**
  * basecamp: the name across the top on paper, over the stripes of a 70s
  * sunset; the sidebar on the right, each part of it a sticker like the
- * posts, in mustard where the posts are in the blog's colour (sticker.ts). Below lg only the page, MobileNav
- * has the rest.
+ * posts, in mustard where the posts are in colour-1 (sticker.ts). Below lg only
+ * the page, MobileNav has the rest.
  */
 export const Layout: TOC<{
   Element: HTMLDivElement;
   Blocks: { default: [] };
 }> = <template>
   <div
+    data-theme="basecamp"
     class="flex min-h-full w-full flex-col bg-stone-50 {{ROOT}}"
     ...attributes
   >
@@ -82,11 +83,11 @@ export const Layout: TOC<{
         {{/if}}
       </div>
     </header>
-    {{! The sunset: mustard into the blog's colour, each stripe thinner }}
+    {{! The sunset: mustard into colour-1, each stripe thinner }}
     <div class="hidden flex-col gap-1.5 lg:flex" aria-hidden="true">
       <div class="h-4 bg-(--color-mustard)"></div>
-      <div class="h-3 bg-accent-300"></div>
-      <div class="h-2 bg-accent-600"></div>
+      <div class="h-3 bg-colour-1-300"></div>
+      <div class="h-2 bg-colour-1-600"></div>
       <div class="h-1 bg-stone-900"></div>
     </div>
 

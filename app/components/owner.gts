@@ -12,7 +12,7 @@ export const Owner: TOC<{ Element: HTMLElement }> = <template>
     <LinkTo
       @route="page"
       @model={{site.about}}
-      class="font-semibold text-accent-800 underline decoration-accent-300 underline-offset-4 hover:decoration-accent-700"
+      class="font-semibold text-colour-1-800 underline decoration-colour-1-300 underline-offset-4 hover:decoration-colour-1-700"
       data-test-owner
       ...attributes
     >{{site.owner}}</LinkTo>

@@ -30,7 +30,7 @@ export const PostList: TOC<{ Args: { posts: Post[] } }> = <template>
           class="relative sm:w-2/5 sm:shrink-0"
         >
           <:else>
-            <div class="h-2 w-full bg-accent-600 sm:h-auto sm:w-2"></div>
+            <div class="h-2 w-full bg-colour-1-600 sm:h-auto sm:w-2"></div>
           </:else>
         </PostCover>
         <div class="flex flex-1 flex-col p-6">
@@ -42,7 +42,7 @@ export const PostList: TOC<{ Args: { posts: Post[] } }> = <template>
             <LinkTo
               @route="post"
               @model={{post.id}}
-              class="hover:text-accent-700"
+              class="hover:text-colour-1-700"
             >{{post.title}}</LinkTo>
           </h2>
           <div class="flex-1">

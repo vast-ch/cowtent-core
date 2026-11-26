@@ -3,7 +3,6 @@ description: A blog for the tests
 owner: Test Writer
 url: https://blog.example.com/trips
 email: writer@example.com
-colour: "#0e7490"
 about: about
 menu:
   - label: About me

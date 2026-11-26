@@ -28,7 +28,7 @@ interface Filter {
 
   {{#if @model.filter.length}}
     <section
-      class="mb-8 flex flex-wrap items-center gap-2 rounded-2xl bg-accent-50 px-4 py-3"
+      class="mb-8 flex flex-wrap items-center gap-2 rounded-2xl bg-colour-1-50 px-4 py-3"
       aria-label={{t "front-page.filter"}}
       data-test-filter
     >
@@ -54,7 +54,7 @@ interface Filter {
       <LinkTo
         @route="index"
         @query={{hash tags=""}}
-        class="ml-auto text-sm text-stone-600 underline underline-offset-4 hover:text-accent-700"
+        class="ml-auto text-sm text-stone-600 underline underline-offset-4 hover:text-colour-1-700"
         data-test-filter-clear
       >{{t "front-page.show-all"}}</LinkTo>
     </section>

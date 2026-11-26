@@ -12,7 +12,7 @@ import type ThemeService from '../services/theme.ts';
 // What each theme looks like, small: its sky over its ground
 const SWATCH: Record<string, string> = {
   alps: 'bg-linear-to-b from-sky-200 from-50% to-slate-500 to-50%',
-  basecamp: 'bg-linear-to-b from-accent-100 from-50% to-stone-100 to-50%',
+  basecamp: 'bg-linear-to-b from-colour-1-100 from-50% to-stone-100 to-50%',
   night: 'bg-linear-to-b from-indigo-950 from-50% to-slate-800 to-50%',
 };
 
@@ -35,7 +35,7 @@ export class ThemeSwitcher extends Component<{ Element: HTMLElement }> {
         {{#each site.themes as |theme|}}
           <button
             type="button"
-            class="flex items-center gap-2 rounded-full bg-white py-1 pr-3 pl-1 text-sm font-medium text-stone-700 ring-1 ring-stone-200 hover:ring-accent-600 aria-pressed:text-stone-900 aria-pressed:ring-2 aria-pressed:ring-accent-600"
+            class="flex items-center gap-2 rounded-full bg-white py-1 pr-3 pl-1 text-sm font-medium text-stone-700 ring-1 ring-stone-200 hover:ring-colour-1-600 aria-pressed:text-stone-900 aria-pressed:ring-2 aria-pressed:ring-colour-1-600"
             aria-pressed={{if (isSame theme this.theme.current) "true" "false"}}
             {{on "click" (fn this.pick theme)}}
             data-test-theme={{theme}}

@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.14.0 - 2026-11-26
+
+- **Every theme has seven colours of its own**, `colour-1` … `colour-7`,
+  each in Tailwind's shades 50 … 950 (`bg-colour-3-200`), in
+  `app/themes/<theme>/colours.css`: alps glacier, pine, gentian,
+  alpenrose, sunset, larch, lake; basecamp faded like old print; night
+  bright on the dark, its shades the other way round. The first is the
+  colour of links, buttons and highlights; the others tell things apart.
+- **A blog's own colours**: `colours:` in site.yaml, up to seven, over
+  the theme's in every theme, their shades made at build time into the
+  stylesheet.
+- **Breaking**: `colour:` in site.yaml is gone, the build stops on it. To
+  keep a blog's colour, write it as the first of `colours:`
+  (`colours: ["#ff1493"]`). The `accent-*` classes are now `colour-1-*`.
+
 ## v0.13.3 - 2026-11-26
 
 - The altitude profile has a faint tick every 5 km, its distance at the

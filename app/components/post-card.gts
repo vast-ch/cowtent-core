@@ -13,7 +13,7 @@ const isFalse = (value: unknown) => value === false;
 /**
  * A post on the front page as a card: its cover on top (@imageClass gives
  * it its shape), then the date, the title, the excerpt, the tags and the
- * filters. Without a cover, a stripe in the blog's colour, unless @stripe
+ * filters. Without a cover, a stripe in colour-1, unless @stripe
  * is false. @frame is its corners, edge and shadow, instead of round ones
 with a soft shadow.
  */
@@ -45,7 +45,7 @@ export const PostCard: TOC<{
     >
       <:else>
         {{#unless (isFalse @stripe)}}
-          <div class="h-2 w-full bg-accent-600"></div>
+          <div class="h-2 w-full bg-colour-1-600"></div>
         {{/unless}}
       </:else>
     </PostCover>
@@ -58,7 +58,7 @@ export const PostCard: TOC<{
         <LinkTo
           @route="post"
           @model={{@post.id}}
-          class="hover:text-accent-700"
+          class="hover:text-colour-1-700"
         >{{@post.title}}</LinkTo>
       </h2>
       <div class="flex-1">
