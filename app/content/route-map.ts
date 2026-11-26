@@ -666,7 +666,9 @@ export async function routeMap(
       threeD.setAttribute('aria-pressed', String(tilted));
     }
 
+    // Before the map has loaded, the terrain comes with it (load below)
     if (ready) terrain(tilted);
+    else element.dataset['terrain'] = tilted ? 'loading' : 'off';
   };
 
   const sameView = (next: MapState) => {

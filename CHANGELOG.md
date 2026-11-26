@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.15.2 - 2026-11-26
+
+- Tilted before the map has loaded, its terrain says it's loading (a test
+  waited for it and failed on a slow network).
+
 ## v0.15.1 - 2026-11-26
 
 - The build's checks of a blog: swisstopo only fails it where a route
