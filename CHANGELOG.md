@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.15.1 - 2026-11-26
+
+- The build's checks of a blog: swisstopo only fails it where a route
+  opens on it, not where a post names it, and a blog may have a single
+  route (v0.15.0 failed Bella's build).
+
 ## v0.15.0 - 2026-11-26
 
 - **Several routes in a post**: `route.gpx`, or numbered like the

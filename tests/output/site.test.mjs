@@ -149,11 +149,17 @@ test("the stylesheet has Frontile's classes, for the mobile menu", () => {
 test('every map is OpenStreetMap, worldwide: no swisstopo left', () => {
   const pages = posts.map(({ id }) => page(`/${id}`)).join('');
 
-  assert.ok(
-    pages.includes('https://www.openstreetmap.org/#map='),
-    'the routes link to openstreetmap.org',
+  // A post's own text may name or link swisstopo; no route opens on it
+  assert.doesNotMatch(pages, /geo\.admin\.ch\/[^"]*layers=/);
+  assert.doesNotMatch(
+    pages.match(/Content-Security-Policy" content="([^"]+)"/)?.[1] ?? '',
+    /geo\.admin\.ch|swisstopo/,
   );
-  assert.doesNotMatch(pages, /geo\.admin\.ch|swisstopo/);
+  if (pages.includes('data-test-route'))
+    assert.ok(
+      pages.includes('https://www.openstreetmap.org/#map='),
+      'the routes link to openstreetmap.org',
+    );
 });
 
 test("a post's routes are its map, and each linked in the feed", () => {
@@ -171,7 +177,6 @@ test("a post's routes are its map, and each linked in the feed", () => {
     );
   }
 
-  assert.ok(routes > 1, 'the fixtures have routes');
   assert.equal(
     rss.match(/\/\d*-?route-[\w-]+\.gpx" download/g)?.length ?? 0,
     routes,
