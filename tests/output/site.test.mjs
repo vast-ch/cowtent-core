@@ -210,11 +210,8 @@ test('the site installs as an app, with icons that exist', () => {
         `<link rel="apple-touch-icon" href="${site.base}apple-touch-icon-180x180.png">`,
       ),
     );
-    assert.ok(
-      html.includes(
-        `<script id="vite-plugin-pwa:register-sw" src="${site.base}registerSW.js">`,
-      ),
-    );
+    // The app registers the service worker itself (app/service-worker.ts)
+    assert.doesNotMatch(html, /registerSW\.js/);
   }
 
   assert.ok(existsSync(join(dist, 'apple-touch-icon-180x180.png')));
@@ -228,6 +225,9 @@ test('the service worker precaches every prerendered page', () => {
 
   assert.doesNotMatch(sw, /\.woff2"/, 'precaches fonts the site does not use');
   assert.doesNotMatch(sw, /url:"gpx\//);
+  // A new deploy takes over the open pages (app/service-worker.ts reloads them)
+  assert.match(sw, /skipWaiting\(\)/);
+  assert.match(sw, /clientsClaim\(\)/);
 });
 
 test('GitHub Pages has a page for unknown URLs', () => {

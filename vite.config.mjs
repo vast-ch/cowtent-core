@@ -100,6 +100,9 @@ export default defineConfig({
     !isTest &&
       VitePWA({
         registerType: 'autoUpdate',
+        // app/service-worker.ts registers it, and keeps an installed app
+        // up to date
+        injectRegister: false,
         // After emberSsg's closeBundle, so that the prerendered pages are
         // there to precache
         integration: { closeBundleOrder: 'post' },
@@ -123,6 +126,10 @@ export default defineConfig({
           theme_color: '#ffffff',
         },
         workbox: {
+          // A new deploy takes over the open pages at once, which
+          // app/service-worker.ts then reloads
+          skipWaiting: true,
+          clientsClaim: true,
           // The app and the prerendered pages (not the fonts of Frontile's
           // theme, which the site doesn't use); the photos only once seen,
           // there are hundreds of them in three widths

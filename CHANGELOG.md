@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.15.3 - 2026-11-28
+
+- **An app installed on a phone updates itself after a deploy.** The site
+  looks for a new version each time it comes back to the screen (and every
+  hour while it's open), and reloads once the new version has taken over.
+  Before, an app on an iPhone's home screen, resumed rather than loaded,
+  kept showing the old deploy (`app/service-worker.ts`, which replaces
+  VitePWA's `registerSW.js`).
+
 ## v0.15.2 - 2026-11-26
 
 - Tilted before the map has loaded, its terrain says it's loading (a test
